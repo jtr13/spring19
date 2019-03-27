@@ -1,0 +1,62 @@
+---
+title: "Community Contribution Assignment"
+author: "Joyce Robbins"
+date: "3/27/2019"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, 
+                      message = FALSE)
+```
+
+### Community Contribution
+
+Note: you must submit your contribution twice:
+
+1) Submit your work on Courseworks, or a description of what you did as appropriate, so you can receive a grade. (.Rmd file + (.pdf or .html))
+
+2) Share on GitHub. Instructions will be provided. For now, please create a github.com account if you don't already have one.
+
+The community contribution assignment provides an opportunity to receive credit for contributing to the collective learning of the class, and perhaps beyond. You will write a blog post style article answering an exploratory data analysis, visualization and/or coding question that is comparative in nature. It should reflect your own experience trying to do something two different ways. In other words you are the tester; you should not rely on what other people say about things online (though you should link to sources that you use as appropriate, for example, those that you use to learn how to do something.) 
+
+The comparison may be done at any level, such as tool level (R vs. Tableau), package level (ggmosaic vs vcd), or function level (ggplotly vs. plot_ly).
+
+Some specific ideas are posted on this page.
+
+Structure your work as follows:
+
+1. Introduction
+
+2. Example using A
+
+3. Example using B
+
+4. Comparison of A and B 
+
+Questions to consider:
+
+* Big picture: do A & B do the same thing or complement each other? Was one designed to replace the other? Is one better suited for certain types of tasks?
+
+* Do their features differ? If so, how?
+
+* How does the quality of documentation compare?
+
+* Are both in active development?
+
+* Do you experience any problems with either?
+
+* Do the learning curves differ?
+
+* What are pros and cons of each?
+
+In short, consider anything that you think is important to take into consideration when choosing between the two options.
+
+This is an opportunity to be opinionated, as long as it's based on your experience! 
+
+For help with writing style (not structure), see Sharon Machlis's articles in Computerworld. Note that her writing is very clear and doesn't assume any prior knowledge to understand. 
+
+You may work alone or in pairs. (To work in a pair, you must sign up on this page in the People section of CourseWorks. If not, submit your work on CourseWorks as usual.)
+
