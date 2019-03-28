@@ -1,0 +1,316 @@
+---
+title: "Data table and more"
+subtitle : "GR5293 Statistical Graphic Community Contribution"
+author: 'Chao Yin, Zeyu Yang'
+output: 
+  html_document:
+    toc: true
+    theme: united
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(data.table)
+library(pryr)
+```
+
+
+## Introduction
+
+`Data table` is a package that provides a high-performance version of base R's data.frame with syntax and feature enhancements for ease of use, convenience and programming speed^[1]^. 
+
+In this article, we will compare `Data table` with other packages to find out the advantages and disadvantages of `Data table`.
+
+__TL;DR__:
+
+- `Data table` is fastest in _grouping_, _reading_ and _writing_ compared to `base r` and `tidyverse`. But it is a little slower in _sorting_ than `base r`
+- `Data table` has a more convinient and concise syntax while `dplyr` is easier to read with the help of `pipeline`.
+- `Data table` and `knitr` can both print out a nice format of table in html than `data frame`. But `Data table` can provide an interactive interface of table with _sorting_ and _searching_ functions.
+
+
+## Installation
+
+The latest version of `Data table` is `1.12.0` as of 2019-03-20. You can simply install this package by using _install.packages_ command.
+
+```{}
+install.packages("data.table")
+```
+
+## Basic syntax
+
+In this part, we are going to introduce the basic syntax of `Data table`.
+<br><br>
+We can create one using the `data.table()`.
+
+```{r}
+DT = data.table(
+  sample1 = sample(1:10, 4),
+  sample2 = sample(11:20, 4),
+  sample3 = c('a','b','c','d')
+)
+DT
+```
+
+You can also convert existing data.frame and list to a data.table using `setDT()` or `as.data.table()` for other structures. Unlike data.frames, columns of `character` type are never converted to `factors` by default.
+<br><br>
+data.table's general syntax is written as `DT[i, j, by]`, read as *Take DT, subset/reorder rows using `i`, then calculate `j`, grouped by `by`*.
+
+
+```{r echo=FALSE, out.width = '50%'}
+knitr::include_graphics("Data table1.png")
+```
+
+
+### Subset row(s) in i
+
+```{r}
+DT <- iris
+DT <- setDT(DT)
+DT[Species == 'setosa' & Sepal.Length > 5.0][1:3]
+```
+
+Within the frame of a `data.table`, columns can be referred to as if they are variables. We do not need to add the prefix `DT$` each time. A comma after the condition in i is not required. In `data.frames`, however, the comma is necessary.
+
+### Select column(s) in j
+
+Select `Sepal.Length` column, but return it as a *vector*.
+
+```{r}
+DT[, Sepal.Length][1:10]
+```
+
+Select `Sepal.Length` column, but return as a data.table instead.
+
+```{r}
+DT[, list(Sepal.Length)][1:3]
+```
+
+Select both `Sepal.Length` and `Sepal.Width` columns and rename them to `Length` and `Width`.
+
+```{r}
+DT[, .(Length = Sepal.Length, Width = Sepal.Width)][1:3]
+```
+
+### Subset in i and do in j
+
+Calculate the average Sepal.Length and Sepal.Width for all setosa specie.
+
+```{r}
+DT[Species == 'setosa', .(mlen = mean(Sepal.Length), mwid = mean(Sepal.Width))]
+```
+
+`.N` is a special built-in variable that holds the number of observations in the current group. In the absence of group by operations, it simply returns the number of rows in the subset.
+
+```{r}
+DT[Species == 'setosa', .N]
+```
+
+### Grouping using by
+
+How can we get the number of each specie?
+
+```{r}
+DT[, .N, by = Species]
+```
+
+
+
+## Lightning speed
+
+Let's first preview our .csv file relatively read as data.table, tibble and data.frame. This dataset has 1 million rows with 6 columns which sampled as characters, integers and double.
+
+```{r, echo=FALSE, message=FALSE}
+setpath = '/Users/zeyu/Google Drive/School/Statistical Graphics_GR5293/Homework/Community contribution/testset.csv'
+DT <- fread(setpath)
+TB <- read_csv(setpath)
+DF <- read.csv(setpath)
+print(DT, topn = 3)
+print(TB, n = 5)
+print(DF, max = 30)
+```
+
+As a main strength of data.table, the lightening speed of processing data makes it popular among users. This part concerns the running time of conducting functions such as reading, writing, grouping and sorting using different tools and we'll make it clearly by showing the barplot.
+
+### Reading
+
+```{r, message=FALSE}
+dtr <- system.time(fread(setpath))
+tbr <- system.time(read_csv(setpath))
+dfr <- system.time(read.csv(setpath))
+dtr # Data.table reading file
+tbr # Tidyverse reading file
+dfr # Base R reading file
+```
+
+### Writing
+
+```{r, message=FALSE}
+dtw <- system.time(fwrite(DT, setpath))
+tbw <- system.time(write_csv(TB, setpath))
+dfw <- system.time(write.csv(DF, setpath, row.names = FALSE))
+dtw # Data.table writing file
+tbw # Tidyverse writing file
+dfw # Base R writing file
+```
+
+### Grouping
+
+```{r, message=FALSE}
+dtg <- system.time(DT[, .(.N), by = .(sample1)])
+tbg <- system.time(
+                   TB %>%
+                   group_by(sample1) %>%
+                   summarise(n1 = n())
+                   )
+dfg <- system.time(by(DF, DT$sample1, count))
+dtg # Data.table grouping
+tbg # Tidyverse grouping
+dfg # Base R grouping
+```
+
+### Sorting
+
+```{r, message=FALSE}
+dts <- system.time(DT[order(sample6)])
+tbs <- system.time(TB %>% arrange(sample6))
+dfs <- system.time(DF[order(DF$sample6),])
+dts # Data.table sorting
+tbs # Tidyverse sorting
+dfs # Base R sorting
+```
+
+
+<br><br><br>
+```{r}
+runningtime <- data.frame(
+                          time = c(dtr[1], tbr[1], dfr[1], dtw[1], tbw[1], dfw[1],
+                                       dtg[1], tbg[1], dfg[1], dts[1], tbs[1], dfs[1]),
+                          tool = rep(c('data.table', 'tidyverse', 'base R'), 4),
+                          func = rep(c('reading', 'writing', 'grouping', 'sorting'), rep(3,4))
+                      )
+runningtime %>%
+    ggplot() +
+    geom_col(aes(x = tool, y = time, fill = tool)) +
+    facet_grid(func ~ ., scales = "free", space = "free") +
+    coord_flip() +
+    scale_fill_brewer(palette = 'Set2') +
+    theme_minimal() +
+    xlab('') +
+    ylab('Running Time (sec)') +
+    guides(fill = FALSE)
+```
+
+As we can see in the plot, data.table consumes the least time to achieve the same goal compared with tidyverse and base R in most functions. R project adopted the data.table algorithm as its default sort in 2016 for R 3.3.0 which makes base R reach the same speed with data.table in sorting function.
+
+## Data table v.s. Dplyr
+
+`Data table` and `dplyr` are similar in some way. Both of them can manipulate data such as selecting columns, filtering values, sorting data and so on. But their syntaxes are quite different. Here are some examples:
+
+For this part, we are going to use the data from https://data.cityofnewyork.us/City-Government/Citywide-Payroll-Data-Fiscal-Year-/k397-673e. The data is named as _Payroll_data_.
+
+```{r echo=F}
+Payroll_data <- fread("/Users/zeyu/Google Drive/School/Statistical Graphics_GR5293/Homework/HW1_Jan 31/Citywide_Payroll_Data__Fiscal_Year_.csv")
+```
+
+ <font size="5">Task 1:</font>
+ 
+List the 10 agencies `Agency Name` with the highest median base salaries `Base Salary` in descending order by median base salary.
+
+ <font size="3">Data table</font>
+```{r}
+Payroll_data[,.(median = median(`Base Salary`)),by=.(`Agency Name`)][order(-median)][1:10]
+```
+
+<font size="3">dplyr</font>
+```{r message=FALSE,warning=FALSE}
+Payroll_data %>%
+  group_by(`Agency Name`)%>%
+  dplyr::summarize(median = median(`Base Salary`))%>%
+  ungroup()%>%
+  arrange(-median)%>%
+  top_n(10)
+```
+
+<font size="5">Task 2:</font>
+
+For `Pay Basis` == "per Annum" rows, list the mean of `Base Salary`, `Regular Hours` and `Regular Gross Paid` for every combination of `Agency Name` and `Fiscal Year` in descending order by mean base salary. Present the top 10 rows.
+
+<font size="3">Data table</font>
+ 
+```{r}
+Payroll_data[`Pay Basis` == "per Annum",                      
+        lapply(.SD, mean),                    
+        by = .(`Fiscal Year`, `Agency Name`),           
+        .SDcols = c("Base Salary", "Regular Hours","Regular Gross Paid")
+        ][order(-`Base Salary`)
+          ][1:10]
+```
+ 
+<font size="3">dplyr</font>
+ 
+```{r message=FALSE,warning=FALSE}
+Payroll_data%>%
+  filter(`Pay Basis` == "per Annum")%>%
+  group_by(`Fiscal Year`, `Agency Name`)%>%
+  dplyr::summarize(`Base Salary` = mean(`Base Salary`),
+                   `Regular Hours` = mean(`Regular Hours`),
+                   `Regular Gross Paid` = mean(`Regular Gross Paid`))%>%
+  ungroup()%>%
+  arrange(-`Base Salary`)%>%
+  .[1:10,]
+```
+
+
+While `data table` and `dplyr` can both provide a flow of actions, `data table` is more concise but may be harder to figure the function of these codes. 
+
+`dplyr` is more readable and convenient for multiple actions with the help of `pipeline`. You can understand the function of the action step by step.
+
+## Nice table output
+
+While the output of data frames may be unorganized, data table can also make the output look nicer by applying `DT` library(An R interface to the JavaScript library DataTables). There are also other packages can do the same thing, such as tibble and knitr.
+
+The data we are using is _wine_ data from `pgmm` package.
+```{r}
+library(pgmm)
+data(wine)
+wine <- wine[,1:10] # Limiting the number of columns
+```
+
+By using _setDT_ function, we can turn a data set into data table.
+```{r}
+wine_DT <- setDT(wine)
+```
+
+
+
+### Data frame
+```{r}
+wine[1:3,]
+```
+This table is not organized and not easy to read.
+
+### Data table
+```{r}
+library(DT) 
+datatable(wine[1:50,])
+```
+`Data table`(with the help of `DT` package) provides a tidy and interactive interface to the data. You can browse more data by clicking bottom right corner or present more data per page in upper left corner
+
+
+### Knitr
+```{r}
+library(knitr)
+knitr::kable(wine[1:5,])
+```
+
+`Knitr` also helps organizing the table. But it has fewer functions. You can choose the package based on your needs.
+
+
+
+<br><br><br><br>
+You can learn more about data table at:
+
+- [1] https://github.com/Rdatatable/data.table/wiki
+- https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html
+- https://rstudio.github.io/DT/
