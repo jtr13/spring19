@@ -21,4 +21,6 @@
 
 [Interactive plotting? plotly OR shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+[geom_mosaic() vs. mosaic()](hw2664.html)
+
 #### Writing Reports
