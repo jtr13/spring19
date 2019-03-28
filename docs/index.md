@@ -28,6 +28,8 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+[Tableau vs. R](https://youtu.be/zAH9i60grxs)
+
 #### Writing Reports
 
 
