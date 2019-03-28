@@ -12,9 +12,11 @@
 
 #### Data Visualization
 
+[ggmosaic vs. vcd::mosaic](Community_Contribution_group_5.html)
+
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [vcd vs. ggplot2](xx2308.html)
 
-[ggmosaic vs. vcd::mosaic](Community_Contribution_group_5.html)
+
 #### Writing Reports
