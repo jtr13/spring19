@@ -16,6 +16,8 @@
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
 
+[Tableau vs. R](https://youtu.be/zAH9i60grxs)
+
 [vcd vs. ggplot2](xx2308.html)
 
 #### Data Visualization (interactive)
@@ -27,8 +29,6 @@
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
-
-[Tableau vs. R](https://youtu.be/zAH9i60grxs)
 
 #### Writing Reports
 
