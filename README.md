@@ -3,9 +3,9 @@ Community Contribution projects for GR5293 Statistical Graphics  web site: https
 
 How to contribute:
 
-Follow instructions in [edav.info] for forking and cloning a repo. 
+Follow instructions in [edav.info](https://edav.info/github.html#branching) to fork and clone a repo, work on a new branch and then submit a pull request.
 
-Create a new branch and do the following:
+On your branch, do the following:
 
 1. Add the `.Rmd` file of your community contribution project to the `R` folder.
 
@@ -13,4 +13,4 @@ Create a new branch and do the following:
 
 3. In the `index.md` file in the `docs` folder, add a link to *your* `.html` file in the appropriate section.  Feel free to create new sections as needed. Keep the entries alphabetical within each section.
 
-Follow the instructions in [edav.info] to create a pull request.
+Post any questions you have on Piazza!
