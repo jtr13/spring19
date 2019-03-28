@@ -24,3 +24,5 @@
 [geom_mosaic() vs. mosaic()](hw2664.html)
 
 #### Writing Reports
+
+[GGPlot2 vs. Plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
