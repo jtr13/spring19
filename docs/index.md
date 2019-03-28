@@ -12,4 +12,6 @@
 
 [Plotly vs. Highcharter](kz2324_yz3383.html)
 
+[Leaft vs. Parcoordinate](xx2295.html)
+
 #### Writing Reports
