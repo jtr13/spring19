@@ -1,0 +1,534 @@
+---
+title: "Explore Stock Charts"
+author: "Yiqiao Yin (YY2502)"
+output: 
+  html_document:
+    toc: TRUE
+    theme: cosmo
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+When it comes to investing in stock market, it is important to be fully aware of as much information as one can. Thorough technical anlaysis is quite important in the final decision making process. Though not representative to everything, the capability of presenting stock charts in an informative manner is very important. It is a combination of aesthetic and science. 
+
+Big picture: do **ggplot2** or **plotly** carry better exploratory data analysis on stock market especially on chart reading and technical analysis on stock charts? Do they accompany each other or are they complement of each other?
+
+This R Notebook walks our audience through two major tool kits in plotting time-series data set: (1) **ggplot2**, and (2) **plotly**. We are going to focus on time-series data especially targeting on stock charts. 
+
+ <a href="#top">Back to top</a>
+
+# Background
+
+## GGPlot2 and Plotly
+
+Authors and practitioners such as David Robinson highly recommended GGPlot2 for its usage because of the convenience of usage, straightforward human-like coding process (such as grouped lines, legends, and so on), and construction of the relationship in data set (such as faceting). 
+
+Source:
+
+- <a href="http://varianceexplained.org/r/why-I-use-ggplot2/">Why I use ggplot2</a>
+
+Others such as *freeCodeCamp* would speak highly of Plotly. This is because GGPlot2 is a static graph while Plotly allows users to creat all sorts of things. They are not just for easy outputs or for convenience of constructing data, but also for the user-friendly interactive platform purpose.
+
+Source:
+
+- <a href="https://medium.freecodecamp.org/how-and-why-i-used-plotly-instead-of-d3-to-visualize-my-lollapalooza-data-d48345e2ca68">How and why I used plotly</a>
+
+- <a href="http://badhessian.org/2014/08/a-brief-introduction-to-plotly/">A Brief Introduction to Plotly</a>
+
+## Candlesticks
+
+Let us review a little what a candlestick is.
+
+A candlestick is a type of price chart used that displays the high, low, open and closing prices of a security for a specific period. It originated from Japanese rice merchants and traders to track market prices and daily momentum hundreds of years before becoming popularized in the United States. The wide part of the candlestick is called the "real body" and tells investors whether the closing price was higher or lower than the opening price (black/red if the stock closed lower, white/green if the stock closed higher).
+
+Source:
+
+- <a hef="https://www.investopedia.com/terms/c/candlestick.asp">Terminology for Candlestick</a>
+
+ <a href="#top">Back to top</a>
+
+# EDA of GGPlot2 and Plotly
+
+With a little background information in head, let us move forward and use a few examples to illustrate the difference between **ggplot2** and **plotly**. 
+
+## Stock Charts EDA Using GGPlot2
+
+Let us try using **ggplot2** to explore some stock charts. To start, let us download some data. 
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+# Loads tidyquant, tidyverse, lubridate, xts, quantmod, TTR 
+library(tidyquant)
+
+# Use FANG data set
+data("FANG") 
+
+# Get AAPL and AMZN Stock Prices
+AAPL <- tq_get("AAPL", get = "stock.prices", from = "2015-09-01", to = "2016-12-31")
+AMZN <- tq_get("AMZN", get = "stock.prices", from = "2000-01-01", to = "2016-12-31")
+
+# Set end date
+end <- as_date("2016-12-31")
+```
+
+The primary features controlling the chart are the aesthetic arguments: these are used to add data to the chart by way of the **aes()** function. When added inside the **ggplot()** function, the aesthetic arguments are available to all underlying layers.
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+AAPL %>%
+    ggplot(aes(x = date, y = close)) +
+    geom_line() +
+    labs(title = "AAPL Line Chart", y = "Closing Price", x = "") + 
+    theme_tq()
+```
+
+What about candlestick chart? Let us attempt to create one using the following code. Here the key function is **geom_candlestick**. 
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+AAPL %>%
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    labs(title = "AAPL Candlestick Chart", y = "Closing Price", x = "") +
+    theme_tq()
+```
+
+What if user does not like this time frame? We have to manually change this in the code. 
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+AAPL %>%
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    labs(title = "AAPL Candlestick Chart", y = "Closing Price", x = "") +
+    theme_tq() + 
+    coord_x_date(xlim = c(end - weeks(6), end),
+                 ylim = c(100, 120))
+```
+
+What if user is a trader and he needs to look at multiple charts the same time? We have the following code. We can try to use Amazon (AMZN), Facebook (FB), Google (GOOG), and Netflix (NFLX) as examples. We can use **ggplot2** to plot a grid of $ 2 \times 2$ candlestick charts. 
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+start <- end - weeks(6)
+FANG %>%
+    filter(date >= start - days(2 * 15)) %>%
+    ggplot(aes(x = date, y = close, group = symbol)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    labs(title = "FANG Candlestick Chart", 
+         subtitle = "Experimenting with Mulitple Stocks",
+         y = "Closing Price", x = "") + 
+    coord_x_date(xlim = c(start, end)) +
+    facet_wrap(~ symbol, ncol = 2, scale = "free_y") + 
+    theme_tq()
+```
+
+Can I add some lines? Traders love to draw lines that are made of the average prices of past certain days. 
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+start <- end - weeks(6)
+FANG %>%
+    filter(date >= start - days(2 * 15)) %>%
+    ggplot(aes(x = date, y = close, group = symbol)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(ma_fun = SMA, n = 15, color = "darkblue", size = 1) +
+    labs(title = "FANG Candlestick Chart", 
+         subtitle = "Experimenting with Mulitple Stocks",
+         y = "Closing Price", x = "") + 
+    coord_x_date(xlim = c(start, end)) +
+    facet_wrap(~ symbol, ncol = 2, scale = "free_y") + 
+  theme_tq()
+```
+
+To make things even more fancier, we can add multiple lines for all 4 candlestick charts. Not only that, let us also add Bollinger Bands for all of them. Term: <a href="https://www.investopedia.com/articles/trading/07/bollinger.asp">Bollinger Bands</a>.
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+start <- end - weeks(24)
+FANG %>%
+    filter(date >= start - days(2 * 20)) %>%
+    ggplot(aes(x = date, y = close, 
+               open = open, high = high, low = low, close = close, 
+               group = symbol)) +
+    geom_barchart() +
+    geom_bbands(ma_fun = SMA, sd = 2, n = 20, linetype = 5) +
+    labs(title = "FANG Bar Chart", 
+         subtitle = "BBands with SMA Applied, Experimenting with Multiple Stocks", 
+         y = "Closing Price", x = "") + 
+    coord_x_date(xlim = c(start, end)) +
+    facet_wrap(~ symbol, ncol = 2, scales = "free_y") + 
+    theme_tq()
+```
+
+## Stock Charts EDA Using Plotly
+
+This subsection let us try to do some stock charts using **plotly**. Let us start with a basic interactive plot. It is user-friendly and interactive because user can click and drag the plot freely for different purpose.
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+library(plotly)
+library(quantmod)
+
+getSymbols("AAPL",src='yahoo')
+
+df <- data.frame(Date=index(AAPL),coredata(AAPL))
+df <- tail(df, 30)
+
+plot_ly(df, type = "candlestick",
+        x = ~Date,
+        open = ~AAPL.Open, high = ~AAPL.High, low = ~AAPL.Low, close = ~AAPL.Close,
+        yaxis = "y",
+        increasing = list(line = list(color = "#455D7A")),
+        decreasing = list(line = list(color = "#F95959")),
+        name = "Price",
+        height = 600, width = 1024)
+```
+
+Now let us plot some more advanced graphs. For example, we can improve candlestick chart with volume bars.
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+# Get data
+stock <- getSymbols("MSFT", auto.assign = F)
+dts <- index(stock)
+df <- data.frame(stock, row.names = NULL)
+df$dates <- dts
+names(df) <- c("Open", "High", "Low", "Close", "Volume", "Adjusted", "dates")
+ 
+# Subset to after Jan 2016
+df <- subset(df, dates > "2016-01-01")
+ 
+# Color or volume bars
+barcols <- c()
+for (i in 1:length(df$dates)) {
+  
+  if (i == 1) {barcols[i] <- "#F95959"}
+  
+  if (i > 1) {
+    x <- ifelse(df$Close[i] > df$Close[i - 1], "#455D7A", "#F95959")
+    barcols[i] <- x
+  }
+}
+ 
+# Moving Avg line
+MA <- runMean(df$Close)
+ 
+# Range selector
+rangeselectorlist = list(
+  x = 0, y = 0.9,
+  bgcolor = "#0099cc",
+  font = list(color = "white"),
+  
+  buttons = list(
+    list(count = 1, label = "reset", step = "all"),
+    list(count = 1, label = "1yr", step = "year", stepmode = "backward"),
+    list(count = 3, label = "3 mo", step = "month", stepmode = "backward"),
+    list(count = 1, label = "1 mo", step = "month", stepmode = "backward"),
+    list(step = "all")
+  )
+)
+
+# Plot
+plot_ly(df, type = "candlestick",
+        x = ~dates,
+        open = ~Open, high = ~High, low = ~Low, close = ~Close,
+        yaxis = "y",
+        increasing = list(line = list(color = "#455D7A")),
+        decreasing = list(line = list(color = "#F95959")),
+        name = "Price",
+        height = 600, width = 1024) %>%
+  
+  add_bars(data = df, x = ~dates, y = ~Volume,
+           marker = list(color = barcols),
+           yaxis = "y2", inherit = F, name = "Vol") %>%
+  
+  add_lines(x = df$dates, y = MA,
+            line = list(width = 3, dash = "5px", color = "#33bbff"),
+            inherit = F, name = "Mov Avg") %>%
+  
+  layout(
+    plot_bgcolor = "rgb(250,250,250)",
+    xaxis = list(title = "", domain = c(0,0.95),
+                 
+                 rangeslider = list(visible = F),
+                 
+                 rangeselector = rangeselectorlist),
+    yaxis = list(domain = c(0.22, 0.9)),
+    yaxis2 = list(domain = c(0, 0.18), side = "right"),
+    
+    showlegend = F,
+    
+    annotations = list(
+      list(x = 0, y = 1, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Microsoft</b>"),
+           font = list(size = 30, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0.8, y = 0.95, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("[", paste(range(df$dates),collapse = " / "), "]"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0, y = 0.18, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Volume</b>"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE)
+    )
+  )
+```
+
+Next, we can also attempt to add Bollinger Bands. 
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+BB <- as.data.frame(BBands(df$Close))
+plot_ly(df, type = "candlestick",
+        x = ~dates,
+        open = ~Open, high = ~High, low = ~Low, close = ~Close,
+        yaxis = "y",
+        increasing = list(line = list(color = "#455D7A")),
+        decreasing = list(line = list(color = "#F95959")),
+        name = "Price",
+        height = 600, width = 1024) %>%
+  
+  add_bars(data = df, x = ~dates, y = ~Volume,
+           marker = list(color = barcols),
+           yaxis = "y2", inherit = F, name = "Vol") %>%
+  
+  # MA
+  add_lines(x = df$dates, y = BB$mavg,
+            line = list(width = 3, dash = "5px", color = "#33bbff"),
+            inherit = F, name = "Mov Avg") %>%
+  
+  # Upper and Lower bounds
+  add_lines(x = df$dates, y = BB$up,
+            line = list(width = 1, dash = "5px", color = "#737373"),
+            fill = "tonexty", fillcolor = "rgba(194, 240, 240, 0.2)",
+            inherit = F, name = "Bollinger") %>%
+  
+  add_lines(x = df$dates, y = BB$dn,
+            line = list(width = 1, dash = "5px", color = "#737373"),
+            fill = "tonexty", fillcolor = "rgba(194, 240, 240, 0.2)",
+            inherit = F, name = "Bollinger") %>%
+  
+  layout(
+    plot_bgcolor = "rgb(250,250,250)",
+    xaxis = list(title = "", domain = c(0,0.95),
+                 
+                 rangeslider = list(visible = F),
+                 
+                 rangeselector = rangeselectorlist),
+    yaxis = list(domain = c(0.22, 0.9)),
+    yaxis2 = list(domain = c(0, 0.18), side = "right"),
+    showlegend = F,
+    
+    annotations = list(
+      list(x = 0, y = 1, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Microsoft</b>"),
+           font = list(size = 30, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0.8, y = 0.95, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("[", paste(range(df$dates),collapse = " / "), "]"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0, y = 0.18, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Volume</b>"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE)
+    )
+  )
+```
+
+Suppose user wants to look at multiple charts together. We can do a grid by uinsg **subplot()** function in **plotly**.
+
+```{r, message=FALSE, error=FALSE, warning=FALSE, echo=FALSE}
+df <- data.frame(Date=index(AAPL),coredata(AAPL))
+df <- tail(df, 30)
+p1 <- plot_ly(df, type = "candlestick",
+        x = ~Date,
+        open = ~AAPL.Open, high = ~AAPL.High, low = ~AAPL.Low, close = ~AAPL.Close,
+        yaxis = "y",
+        increasing = list(line = list(color = "#455D7A")),
+        decreasing = list(line = list(color = "#F95959")),
+        name = "Price")
+# Get data
+stock <- getSymbols("MSFT", auto.assign = F)
+dts <- index(stock)
+df <- data.frame(stock, row.names = NULL)
+df$dates <- dts
+names(df) <- c("Open", "High", "Low", "Close", "Volume", "Adjusted", "dates")
+ 
+# Subset to after Jan 2016
+df <- subset(df, dates > "2016-01-01")
+ 
+# Color or volume bars
+barcols <- c()
+for (i in 1:length(df$dates)) {
+  
+  if (i == 1) {barcols[i] <- "#F95959"}
+  
+  if (i > 1) {
+    x <- ifelse(df$Close[i] > df$Close[i - 1], "#455D7A", "#F95959")
+    barcols[i] <- x
+  }
+}
+ 
+# Moving Avg line
+MA <- runMean(df$Close)
+ 
+# Range selector
+rangeselectorlist = list(
+  x = 0, y = 0.9,
+  bgcolor = "#0099cc",
+  font = list(color = "white"),
+  
+  buttons = list(
+    list(count = 1, label = "reset", step = "all"),
+    list(count = 1, label = "1yr", step = "year", stepmode = "backward"),
+    list(count = 3, label = "3 mo", step = "month", stepmode = "backward"),
+    list(count = 1, label = "1 mo", step = "month", stepmode = "backward"),
+    list(step = "all")
+  )
+)
+p2 <- plot_ly(df, type = "candlestick",
+        x = ~dates,
+        open = ~Open, high = ~High, low = ~Low, close = ~Close,
+        yaxis = "y",
+        increasing = list(line = list(color = "#455D7A")),
+        decreasing = list(line = list(color = "#F95959")),
+        name = "Price") %>%
+  
+  add_bars(data = df, x = ~dates, y = ~Volume,
+           marker = list(color = barcols),
+           yaxis = "y2", inherit = F, name = "Vol") %>%
+  
+  add_lines(x = df$dates, y = MA,
+            line = list(width = 3, dash = "5px", color = "#33bbff"),
+            inherit = F, name = "Mov Avg") %>%
+  
+  layout(
+    plot_bgcolor = "rgb(250,250,250)",
+    xaxis = list(title = "", domain = c(0,0.95),
+                 
+                 rangeslider = list(visible = F),
+                 
+                 rangeselector = rangeselectorlist),
+    yaxis = list(domain = c(0.22, 0.9)),
+    yaxis2 = list(domain = c(0, 0.18), side = "right"),
+    
+    showlegend = F,
+    
+    annotations = list(
+      list(x = 0, y = 1, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Microsoft</b>"),
+           font = list(size = 30, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0.8, y = 0.95, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("[", paste(range(df$dates),collapse = " / "), "]"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0, y = 0.18, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Volume</b>"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE)
+    )
+  )
+BB <- as.data.frame(BBands(df$Close))
+p3 <- plot_ly(df, type = "candlestick",
+        x = ~dates,
+        open = ~Open, high = ~High, low = ~Low, close = ~Close,
+        yaxis = "y",
+        increasing = list(line = list(color = "#455D7A")),
+        decreasing = list(line = list(color = "#F95959")),
+        name = "Price") %>%
+  
+  add_bars(data = df, x = ~dates, y = ~Volume,
+           marker = list(color = barcols),
+           yaxis = "y2", inherit = F, name = "Vol") %>%
+  
+  # MA
+  add_lines(x = df$dates, y = BB$mavg,
+            line = list(width = 3, dash = "5px", color = "#33bbff"),
+            inherit = F, name = "Mov Avg") %>%
+  
+  # Upper and Lower bounds
+  add_lines(x = df$dates, y = BB$up,
+            line = list(width = 1, dash = "5px", color = "#737373"),
+            fill = "tonexty", fillcolor = "rgba(194, 240, 240, 0.2)",
+            inherit = F, name = "Bollinger") %>%
+  
+  add_lines(x = df$dates, y = BB$dn,
+            line = list(width = 1, dash = "5px", color = "#737373"),
+            fill = "tonexty", fillcolor = "rgba(194, 240, 240, 0.2)",
+            inherit = F, name = "Bollinger") %>%
+  
+  layout(
+    plot_bgcolor = "rgb(250,250,250)",
+    xaxis = list(title = "", domain = c(0,0.95),
+                 
+                 rangeslider = list(visible = F),
+                 
+                 rangeselector = rangeselectorlist),
+    yaxis = list(domain = c(0.22, 0.9)),
+    yaxis2 = list(domain = c(0, 0.18), side = "right"),
+    showlegend = F,
+    
+    annotations = list(
+      list(x = 0, y = 1, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Microsoft</b>"),
+           font = list(size = 30, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0.8, y = 0.95, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("[", paste(range(df$dates),collapse = " / "), "]"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE),
+      
+      list(x = 0, y = 0.18, xanchor = "left", yanchor = "top",
+           xref = "paper", yref = "paper",
+           text = paste0("<b>Volume</b>"),
+           font = list(size = 15, family = "serif"),
+           showarrow = FALSE)
+    )
+  )
+```
+
+```{r, message=FALSE, error=FALSE, warning=FALSE}
+p <- subplot(p1, p2, p3); p
+```
+
+## Comment
+
+We we can see from above subsections that **ggplot2** and **plotly** have different purposes and characteristics.
+
+- First, they are presenting in different schools of thoughts and purposes. The biggest difference is that **ggplot2** is static and **plotly** is user friendly.
+
+- Second, for simple candlestick charts, we can fairly conclude that they are comparable. Both packages are able to build candlestick charts fairly easily. If this is what the audience wants, I would say they are equivalent.
+
+- For active environment especially when user/audience requires much more advanced graphics such as draggin chart back and forth or choosing different time frame on a click-base, it is fairly obvious that **plotly** is much more capable and convenient than that **ggploy22** can provide. 
+
+- For personal experience, I do not really do day trading anymore. However, there are situations occured that day trading is required and this is when time becomes an urgent matter. I do not and will not go back to my code to change the date so this makes **ggploy2** obsolete. Under such circumstances, I always refer to **plotly**.
+
+- Learning curves in this notebook actually have a whole lot to do with user's experience in reading stock charts. For beginners, I would say that flexibility is the key. One can always start with **ggplot2** simply because they are fairly intuitive to learn, but eventually one needs to look for more options and this is where **plotly** comes in handy. I would say that for experienced practitioners in stock market they would probably have a fairly fixed way of thinking and they are very consistent. For these users and audience, either **ggplot2** or **plotly** is fine because the graphical presentation can be coded before market opens and graphs will have their purpose. 
+
+- Pros and Cons for **ggplot2**: The pros is that it is fairly easy package to navigate. It is a package that everyone can get their hands on and start to plot some nice candlestick charts. Codes can be finished before market opens when time becomes urgent and in this case time urgency will not matter too much. The cons is that it is static and not user-friendly. This means much less flexibility once the code is finished. 
+
+- Pros and Cons for **plotly**: The pros is that it is user-friendly and it has much more flexibility on navigating the charts (such as dragging around or draw boxes in the graph with mouse) which adds in that layer of ``playful'' flavor for users. This can be attractive and quite catchy for most of people (myself included). After coding is finished, user can still change the plot somehow to adapt to his/her requirement which is quite nice. The cons is that it is a little bit more difficult to learn and the lines of codes may go much longer than expected. 
+
+ <a href="#top">Back to top</a>
+
+# Summary
+
+As we can observe from the examples illustrated above, the usages have pros and cons. There is not really one perfect tool kit to do everything. It all depends on what the user prefers and what sort of audience the presentation is facing. 
+
