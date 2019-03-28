@@ -8,7 +8,7 @@
 
 #### Data Transformation
 
-[purrr vs. apply](purrr vs. apply.html)
+[purrr vs. apply](ss5593&fq2150.html)
 
 #### Data Visualization
 
