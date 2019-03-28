@@ -10,7 +10,8 @@
 
 #### Data Visualization
 
-[Plotly vs. Highcharter](kz2324_yz3383.html)
-[Vcd vs. GGplot2](xx2308.html)
+[plotly vs. highcharter](kz2324_yz3383.html)
+
+[vcd vs. ggplot2](xx2308.html)
 
 #### Writing Reports
