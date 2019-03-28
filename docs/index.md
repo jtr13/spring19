@@ -8,6 +8,8 @@
 
 #### Data Transformation
 
+[purrr vs. apply](purrr vs. apply.html)
+
 #### Data Visualization
 
 [Plotly vs. Highcharter](kz2324_yz3383.html)
