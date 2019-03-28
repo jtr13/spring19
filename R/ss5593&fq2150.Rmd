@@ -1,0 +1,345 @@
+---
+title: "purrr v.s. apply"
+author: "Shengjie Sun(ss5593), Feng QIU(fq2150)"
+date: "March 23, 2019"
+output:
+  html_document:
+    theme: united
+    toc: yes
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(repurrrsive)
+library(purrr)
+data("sw_films")
+data("sw_people")
+sw_films <- sw_films[c(1,5,7)]
+```
+
+# Introduction
+
+Every R user should be very familiar with `data.frame` and it's extension like `data.table` and `tibble`. However, only small percentage of data can be stored in data frame naturally. In R, we do have special data structure for other type of data like corps, spatial data, time series, JSON files and so on. Indeed, they are all built on `list`, or say `nested list`. For the tedious and dirty data wrangling job, from time to time, we have to deal with `nested list`. 
+
+One could bring `for`-loop into his code but it is either time consuming and annoying in writing iteration code. Therefore, functions provided by base R such as `apply()` can make such work more efficient and simpler. One the other hand, in `purrr`, one of the important packages in `tidyverse`, we have `map()` family. Although `map()` family is just a very small part of `purrr`, a functional programming tool, the similarity between these two tools does highly exist.
+
+In this passage, functions such as `apply()` in base R and a group of functions in `map()` family will be introduced in the first place. Then, the comparison will be made to see if there are any differences between `apply` family and `map` family. Two detailed cases by applying two family functions will also be covered to offer a sense of using experience.  
+
+## Apply Family
+
+### Philosophy
+Vectorization and acceleration.
+
+It worth to mention `dply` package here, which is built on the idea: "Split", "Apply", "Combine". But personally speaking, I believe it may be replaced by `tidyverse`, or say `dplyr` in particular. 
+
+### Syntax
+
+In base R, functions such as `apply` can be used to replace `for`-loop, in someway provide an elegant way in doing repeating work. The most used functions are given as follows:
+
+1. `apply()` - to apply functions to margins of an array or matrix. `lapply()` and `sapply()` - functions used to data list while the former one returns a list with same length as the input and the latter one returns a vector.
+2. `mapply()` - apply functions more multiple inputs.
+
+The syntax of these `apply` family functions are quite similar and straightforward:
+```{r,eval=FALSE}
+apply(X, .Margin, function, ...)
+
+lapply(List, function,...)
+
+sapply(List, function,...)
+
+mapply(function,Arguments)
+```
+
+When dealing data set in a list, functions provided by package `l*ply` can also be helpful. Saying `l*ply` is to deal with list, the character it acts is actually the same as `lapply` and `sapply` but with a more convenient way in changing output by changing the second character `*` in the function. For different purpose, the output form has its corresponding letter: `a` - Array; `l` - List; `d` - Dataframe; `_` - no output.
+
+The syntax of `l*ply` is the same as `lapply`:
+```{r,eval=FALSE}
+l*ply(List, function,...)
+```
+
+
+## Purrr
+
+### Philosophy
+Make your pure functions purr with purrr, a functional programming library for R.
+
+As we mentioned before, `map()` family is only a small part for `purrr`, but in this blog, we will not bother ourselves to handling concept like `pure` / `impure` function and focus on list operation.
+
+### Syntax
+
+The `map()` is built for the efficiency when dealing with raw data, in most cases are the data lists. These functions allow users focus on their workflow rather struggling in building the iteration loop. Thus, the syntax of `map()` are so simple, in the later part of this passage, you could see how these functions works.
+
+Covering most cases, the following functions in `map` are usually used in the package:
+
+1. `map()` - the basic `map` function, returning results in a list;
+2. `map_xx()` - functions dealing different input types and return outcomes by specific function;
+3. `map2()` - function dealing with two different data lists. `pmap()` - functions dealing with even more than two data lists.
+4. Other useful functions such as `safely()`, `possibly()` and `walk()`.
+
+For most functions in `map` family, they share the same, simple and straightforward syntax as follow:
+```{r, eval=FALSE}
+# Basic map() function returnsresults in a list.
+map(data.list, function, ...)
+# map_lgl() dealing with logical argument returns the outcome in a vector
+map_lgl(data.list, function, ...)
+# map2() dealing with two different sets returns a list
+map2(list1, list2, function,...)
+```
+
+To give a more detailed demonstration, here are some examples for the different `map` function types:
+
+**Example 1.** Select the title of Star War movies and returns a vector outcome. 
+```{r}
+map_chr(sw_films,~.x$title)
+```
+
+**Example 2.** Simulate different number of data from normal distribution, each with different mean and standard deviation.
+```{r}
+# set the number of data to be simulated with their mean and sd
+Number <- list(10,15,20,25,30)
+Mean <- list(-20,-10,0,10,20)
+Sd <- list(2,1,0,3,4)
+
+# using pmap() requires all the list to be emerged into one list
+data.list <- list(Number,Mean,Sd)
+Simulation <- pmap(data.list,
+                   function(Number,Mean,Sd)
+                     rnorm(n = Number,
+                           mean = Mean,
+                           sd = Sd))
+head(Simulation[[4]])
+```
+
+Last but not least, functions provided by `purrr` such as `safely()`, `possibly()` are also helpful in missing value cases.`safely()` returns both the outcomes for the inputs that functions can be applied to and the error information of where the *NA* value is. As for `possibly()`, it only returns the outcomes, thus this can be useful in the workflow to get rid of the error of missing values. Sometimes `walk()` can omit the double square brackets `[[]]` in printing a more tidy outcome.
+
+**Example 3.** Dealing with data lists with missing value.
+
+```{r}
+L <- list(1:5,c(6:9,NA),c(NA, 12,13),14)
+map_dbl(L, 
+        possibly(sum,
+                 otherwise = NA))
+```
+
+
+# Comparison of purrr and plyr
+
+## lapply() v.s. purrr::map()
+
+We want to extract the director of every movie.
+```{r}
+# purrr::map() way
+purrr::map(sw_films, ~.x[["director"]])
+```
+
+```{r}
+# lapply
+lapply(sw_films, function(x){x[["director"]]})
+```
+
+The only difference is that in `purrr`, we can write lambda/anonymous functions. It does make codes more readable but for beginner it may be easier to understand a function defined explicitly. 
+
+If you play around with R a little bit longer time, you may know the "[[" as follows:
+```{r}
+lapply(sw_films, "[[", "director")
+```
+
+I remember in the last semester, for one homework of GR5206, I had to take the second element in every list. When I see someone use "[[" in this way, I felt R is a language full of seemly intuitive but actually unpredictable small tricks. 
+
+`purrr` way is definitely more readable intuitive, while it seems to be wired to treat "[[" as a function. 
+
+#### More flavors
+
+I found `plyr::llply` returns something strange in this case. Wired!
+```{r}
+plyr::llply(sw_films, "[[", 6)
+```
+
+If you are do not want "list in, list out". 
+```{r}
+plyr::laply(sw_films, "[[", 6)
+sapply(sw_films, "[[", 6)
+```
+
+Generally, if your list do not have names and you do know the correct index, purrr:map is preferred to many sense. 
+
+## mapply() v.s. purrr::map2(), pmap()
+
+```{r}
+director <- purrr::map(sw_films, ~.x[["director"]])
+film <- purrr::map(sw_films, ~.x[["title"]])
+
+film_paste <- purrr::partial(paste, sep = "")
+
+purrr::map2_chr(film, director, ~film_paste(.x, "is filmed by", .y))
+```
+
+```{r}
+director <- lapply(sw_films, function(x){x[["director"]]})
+film <- lapply(sw_films, function(x){x[["title"]]})
+
+mapply(function(x, y){paste(x, "is filmed by", y, sep = "")}, film, director)
+```
+
+We can see clearly, when the task become more and more complicate, the apply family become dirtier to use and hard to maintain. Besides the lambda function, the `purrr::partial()` provided by `purrr` let us prefill the argument of functions and thus further simply the coding for map part. On the other hand, `purrr::partial()` let us more easy to refuse the function we defined. 
+
+## The First Case study. 
+In this case, we want know how the height of every people in `sw_people`
+
+1. Extract the height element
+2. Transfer the string to numbers
+3. Handle the unknown case (NA)
+4. Transfer the unit from centimeters to feet
+
+### Pruely with apply
+```{r}
+height_cm <- lapply(sw_people, "[[", "height")
+height_cm <- sapply(height_cm, function(x){
+  return(ifelse(x=="unknown", NA, as.numeric(x)))
+})
+height_ft <- sapply(height_cm, function(x){
+  return(ifelse(is.na(x), NA, x*0.0328084))
+})
+
+name<-sapply(sw_people, "[[", "name")
+names(height_ft) <- name
+
+tail(height_ft, 12)
+```
+
+
+### Pruely with purrr
+
+```{r, warning=FALSE, message=FALSE}
+to_na <- partial(ifelse, yes=NA)
+to_ft <- as_mapper(~.x*0.0328084)
+
+height_ft <- map(sw_people, "height") %>%
+  map(~to_na(.x == "unknown", no=as.numeric(.x))) %>%
+  map_dbl(possibly(to_ft, NA_real_)) %>%
+  set_names(map_chr(sw_people, "name")) 
+
+height_ft %>% tail(12)
+```
+
+1. We can see with `apply()`, we need to handle `NA` manually and carefully while `possibly` in `purrr` ease this task.
+
+2. `apply()` are not easy to maintain and reuse, while function like `partial()` and `as_mapper` in `purrr` make the code nice to read and modify. 
+
+## The Second Case Study
+
+Starting with two different lists, which will be turned into a faceted histogram. We will use the sw_films and sw_people datasets to answer a question:
+
+What is the distribution of heights of characters in each of the Star Wars films?
+
+### Pruely with apply: Dirty!
+```{r}
+filmtitle <- sapply(sw_films, "[[", "title")
+characters <- lapply(sw_films, "[[", "characters")
+
+height = sapply(sw_people, "[[", "height")
+height <- sapply(height, function(x){
+  return(ifelse(x=="unknown", NA, as.numeric(x)))
+})
+sw_characters = data.frame(height = height,
+                           url = sapply(sw_people, "[[", "url"))
+
+find_height <- function(x){
+  for (i in 1:length(x)){
+    index <- x[i] == sw_characters$url
+    x[i] <- sw_characters[index, "height"]
+  }
+  return(x)
+}
+
+height <- lapply(characters, find_height)
+height <- sapply(height, function(x){
+  return(ifelse(x=="unknown", NA, as.numeric(x)))
+})
+sapply(height, hist)
+```
+
+As the task become more and more complex, `apply()` family are not friendly to use, sometimes, the output is not what we want and graph is ugly. To be more specifically:
+
+1. We do not want the output except histograms.
+2. The title and axis to difficult to change properly.
+3. The output of `apply()` is not that easy to predict correctly.
+4. The plot in base R is flexible but not good for communicate
+
+### Pruely with purrr combined with tidyverse
+```{r, warning=FALSE, message=FALSE}
+# Turn data into correct dataframe format
+film_by_character <- tibble(filmtitle = map_chr(sw_films, "title")) %>%
+    mutate(filmtitle, characters = map(sw_films, "characters")) %>%
+    unnest()
+
+# Pull out elements from sw_people
+sw_characters <- map_df(sw_people, `[`, c("height","mass","name","url"))
+
+# Join our two new objects
+character_data <- inner_join(film_by_character, sw_characters, by = c("characters" = "url")) %>%
+    # Make sure the columns are numbers
+    mutate(height = as.numeric(height), mass = as.numeric(mass))
+
+# Plot the heights, faceted by film title
+ggplot(character_data, aes(x = height)) +
+  geom_histogram(stat = "count") +
+  facet_wrap(~ filmtitle)
+```
+
+Incredibly clear and concise!
+
+### Apply with other pacakge in tidyverse except purrr
+
+If you only want to use `apply()` family to wrangle data but still use other efficient packages in `tidyverse`. You can code like this. Even more dirty to some extend. As we can only input `data.frame` into `ggplot2`, we need to transfer `list` to `data.frame`. 
+
+```{r}
+# Turn data into correct dataframe format
+filmtitle <- sapply(sw_films, "[[", "title")
+characters <- lapply(sw_films, "[[", "characters")
+characters_exp <- c(NULL)
+for (i in 1:length(characters)){
+  for (j in 1:length(characters[[i]])){
+    characters_exp <- c(characters_exp, characters[[i]][j])
+  }
+}
+Num_characters <- sapply(characters, length)
+film_by_character <- data.frame(filmtitle = rep(filmtitle, Num_characters),
+                                characters = characters_exp)
+
+# Pull out elements from sw_people
+sw_characters <- data.frame(1:87)
+people_str <- c("height","mass","name","url")
+for(i in 1:length(people_str)){
+  sw_characters = cbind(sw_characters, sapply(sw_people, "[[", people_str[i]))
+}
+sw_characters <- sw_characters[,-1]
+colnames(sw_characters) <- people_str
+```
+
+# Conclusion
+
+From above comparison, you have got lots of sense of the usage of and difference in those two packages and the following we will talk some general difference.
+
+## Big Picture
+Even though `purrr` is not built to replace `apply()` family, based on my own experience, I do think `map()` family can replace `apply()` family totally. 
+
+## Development
+`apply()` and even `plyr` is no longer under active development. The innovation is happening elsewhere, in `purrr` and the other packages in the `tidyverse`. 
+## Learning Curve
+This is quite depends, at least for me, there is no huge difference, both are not difficult to learn. Attention, we focus on `map()` in `purrr`. If you want to understand the whole `purrr` well, the learning curve is definitely higher.
+
+## Documents
+`purrr` and `apply()` both are well document and there are huge materials online.
+
+# Citations
+
+1. https://jennybc.github.io/purrr-tutorial/bk01_base-functions.html
+
+2. https://www.datacamp.com/courses/foundations-of-functional-programming-with-purrr
+
