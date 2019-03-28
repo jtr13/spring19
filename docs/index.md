@@ -8,9 +8,26 @@
 
 #### Data Transformation
 
-#### Data Visualization
+[purrr vs. apply](ss5593&fq2150.html)
 
-[Plotly vs. Highcharter](kz2324_yz3383.html)
-[ggplotly vs. plot_ly](Community_Contribution-gr2.html)
+#### Data Visualization (static)
+
+[geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
+
+[ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
+
+[vcd vs. ggplot2](xx2308.html)
+
+#### Data Visualization (interactive)
+
+[ggplot2 vs. plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
+
+[ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
+
+[plotly vs. highcharter](kz2324_yz3383.html)
+
+[plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
 #### Writing Reports
+
+
