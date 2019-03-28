@@ -20,6 +20,8 @@
 
 [vcd vs. ggplot2](xx2308.html)
 
+[R vs. Tableau in Mapping](project_cc.html)
+
 #### Data Visualization (interactive)
 
 [ggplot2 vs. plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
