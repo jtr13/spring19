@@ -1,0 +1,164 @@
+---
+title: "Dynamic Interactive Data Visualization Tools’ Comparison —— ggplotly vs plot_ly"
+author: "Ying Jin, Xinzhu Wang"
+date: "3/24/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+Nowadays, it’s more and more popular for people to analyze data using interactive visualization. R as a powerful tool undoubtedly provides several packages to make interactive data visualization. In this report, we would like to explore and compare two functions in *plotly* package: *ggplotly* and *plot_ly*. Generally, *ggplotly* is an interactive, browser-based charting library based on *ggplot2* and *plot_ly* is an independent graphing library makes interactive, publication-quality graphs. They have something in common while there are still some differences between these two functions. 
+
+The dataset we used comes from different sources including federal, state and local programs. It is about the affordable housing units which represent housing received financial assistance under any government program by town from Year 2011 to 2016. The dataset contains town, year, total units counted in 2010(X2010.Census.Units), units in 4 different types of assistance(Government Assisted, Tenant Rental Assistance, Single Family CHFA/USDA Mortgages and Deed Restricted), Total assisted Units and affordable housing percentage(Percent.Affordable).
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+```
+
+
+```{r}
+housing <- read.csv("Affordable_Housing_by_Town_2011-Present.csv")
+head(housing, 5)
+```
+
+We basically want to analyze the percent of assisted housing and compare the four different assistance types for different year. So we used tidyverse package to group by year and gather the four assistance type in a new data frame. 
+```{r,warning=FALSE}
+housing_bar <- housing %>% group_by(Year) %>% mutate_each(funs(mean))%>%select(5:8)%>%tidyr::gather("assistance_type", "mean", 2:5) 
+head(housing_bar,5)
+```
+
+## Analyzing data 
+
+We now simply visualize and analyze this dataset to compare two functions.
+
+### 1. Histogram
+We focus on 2016 and want to see the overall affordable housing percentage distribution pattern. It shows that few affordable percentages are over 20, most are under 10 percent and the distribution is right skewed.
+
+*ggplotly*
+```{r, message=FALSE, warning=FALSE}
+
+housing2016 <- housing[housing$Year == 2016,]
+housing$Year <- as.factor(housing$Year)
+g <- ggplot(housing2016,aes(x = Percent.Affordable)) + geom_histogram(bins = 20, col = "grey", fill = "lightblue", center = 1) 
+ggplotly(g)
+```
+
+*plot_ly*
+```{r, message=FALSE, warning=FALSE}
+plot_ly(housing[housing$Year==2016,], x = ~Percent.Affordable) %>% add_histogram()
+```
+
+
+### 2. Boxplot
+We also draw a boxplot to see the distribution, more specific on outliers. Obviouly from the boxplot, there exist a few outliers. The specific value of outliers will be shown when you click the point. 
+
+*ggplotly*
+```{r, message=FALSE, warning=FALSE}
+g <- ggplot(housing2016,aes(y = Percent.Affordable)) + geom_boxplot() 
+ggplotly(g)
+```
+
+*plot_ly*
+```{r, message=FALSE, warning=FALSE}
+plot_ly(housing2016,y=~housing2016$Percent.Affordable,boxpoints = "suspectedoutliers") %>% add_boxplot(x = "Overall")
+```
+
+
+### 3. Heatmap
+For the overall affordable percentage, let's see its color distribution in different years. The affordable percentage is most gathered in the range of less than 5.
+
+*ggplotly*
+```{r, message=FALSE, warning=FALSE}
+library(viridis)
+g <- ggplot(housing,aes(x = Year, y = Percent.Affordable)) + geom_bin2d(binwidth = 3)+  scale_fill_viridis()
+ggplotly(g)
+```
+
+*plot_ly*
+```{r, message=FALSE, warning=FALSE}
+plot_ly(x = ~housing$Year, y = ~housing$Percent.Affordable, z = ~housing$Percent.Affordable) %>% add_histogram2d(colorscale = "Blues")
+```
+
+
+### 4. Density
+Then we dig in to specific types. We want to see the density curve for 4 different assistance types in 2016. It tells that Deed restricted units and tenant rental are gathered while government assisted units and single family CHFA/USDA Mortgages are relatively separated. 
+
+*ggplotly*
+```{r, message=FALSE, warning=FALSE}
+housing_tidy <- housing2016 %>% tidyr::gather("assistance", "numbers", 5:8)
+y <- density(housing2016$Gov.Assisted)
+g <- ggplot(housing_tidy,aes(x = numbers)) + geom_density(aes(fill = assistance), alpha = 0.5) + xlim(0,300)
+ggplotly(g)
+
+```
+
+*plot_ly*
+```{r, message=FALSE, warning=FALSE}
+fit <- density(housing2016$Gov.Assisted)
+fit1 <- density(housing2016$Tenant.Rental.Assistance)
+fit2 <- density(housing2016$Single.Family.CHFA..USDA.Mortgages)
+fit3 <- density(housing2016$Deed.Restricted.Units)
+plot_ly(x = ~fit$x, y = ~fit$y, type = "scatter",  mode = "lines", fill = "tozeroy", yaxis = "y", name = "Gov.Assisted") %>% layout(xaxis = list(range = c(0,300))) %>% add_trace(x = ~fit1$x, y = ~fit1$y, type = "scatter",  mode = "lines", fill = "tozeroy", yaxis = "y", name = "Tenant.Rental.Assistance") %>% layout(yaxis = list(overlaying = "y", side = "right"), xaxis = list(range = c(0,300))) %>% add_trace(x = ~fit2$x, y = ~fit2$y, type = "scatter",  mode = "lines", fill = "tozeroy", yaxis = "y", name = "Single.Family.CHFA..USDA.Mortgages") %>% layout(yaxis = list(overlaying = "y", side = "right"), xaxis = list(range = c(0,300))) %>% add_trace(x = ~fit3$x, y = ~fit3$y, type = "scatter",  mode = "lines", fill = "tozeroy", yaxis = "y", name = "Deed.Restricted.Units") %>% layout(yaxis = list(overlaying = "y", side = "right"),xaxis = list(range = c(0,300))) %>% layout(legend = list(x = 0.55, y = 1.0))
+```
+
+### 5. Barplot
+What about the mean of 4 types in different year? We can see that the change in different years are not so obvious, they are stable. For the mean, the government assisted units are the most and the deed restricted units are the less.
+
+*ggplotly*
+```{r, message=FALSE, warning=FALSE}
+housing_tidy2 <- housing %>% group_by(Year) %>% mutate_each(funs(mean)) %>% select(5:8) %>%
+tidyr::gather("assistance_type", "mean", 2:5) 
+g <- ggplot(housing_tidy2,aes(x = assistance_type, y = mean, fill = Year)) + geom_bar(stat = "identity", position = "dodge") + scale_fill_brewer(palette = 4)+ theme(axis.text.x = element_text(size = 7, angle = 10)) 
+ggplotly(g)
+```
+
+*plot_ly*
+```{r, message=FALSE, warning=FALSE}
+housing_bar <- housing %>% group_by(Year) %>% mutate_each(funs(mean))%>%select(5:8)%>%tidyr::gather("assistance_type", "mean", 2:5) 
+plot_ly(x = ~housing_bar$assistance_type, y = ~housing_bar$mean, color = ~factor(housing_bar$Year)) %>% add_bars() %>% layout(barmode = "group")
+```
+
+
+### 6. Scatterplot
+Finally, let's see if there is any correlationship between 4 assistance types. It displays some correlations and the relationship between governmenr assistance and tenant rental is the closest. The differences through years are not obvious.
+
+*ggplotly*
+```{r, message=FALSE, warning=FALSE}
+library(GGally)
+g <- ggpairs(housing, columns = 5:8, aes(color = Year, alpha = 0.5))
+ggplotly(g)
+```
+
+*plot_ly*
+```{r, message=FALSE, warning=FALSE}
+plot_ly() %>% add_trace(type='splom',dimensions=list(list(label='Gov.Assisted',values=~housing$Gov.Assisted),list(label='Tenant.Rental',values=~housing$Tenant.Rental.Assistance),list(label='Single',values=~housing$Single.Family.CHFA..USDA.Mortgages),list(label='Deed.Restricted.Units', values=~housing$Deed.Restricted.Units)),text=~class,marker = list(color = as.integer(housing_bar$Year),size = 6,line = list(width = 1))) 
+```
+
+
+##Conclusion 
+
+We can see that two functions are roughly the same thing: they are from the same package and they both make interactive graphs. However, *plot_ly* can make a lot more interactive graphs than *ggplotly* since it is obvious that *ggplotly* is simply a way to convert static plots generated from *ggplot2* into interactive version while *plot_ly* is an independent way to directly make an interactive version of graphs.  
+
+Initially, *plotly* was designed as a complement for *ggplot2* and *plot_ly* with its own unique structure is the result for that. *ggplotly* is a combination of *plotly* and *ggplot2*, making it easier to make interactive graphs for people who never know *plot_ly* but are familiar with *ggplot2*. So, neither *ggplotly* nor *plot_ly* is designed to replace the other. They are definitely designed for different target users. 
+
+As for the features, *plot_ly* has a unique and complete structure but *ggplotly* is dependent on *ggplot2*. The forms are as follows:
+
+*ggplotly(p = ggplot2::last_plot(), width = NULL, height = NULL, tooltip = "all", dynamicTicks = FALSE, layerData = 1, originalData = TRUE, source = "A", ...)*
+
+*plot_ly(data = data.frame(), ..., type = NULL, name, color, colors = NULL, alpha = NULL, stroke, strokes = NULL, alpha_stroke = 1, size, sizes = c(10, 100), span, spans = c(1, 20), symbol, symbols = NULL, linetype, linetypes = NULL, split, frame, width = NULL, height = NULL, source = "A")*
+
+Because of the different features of *ggplot2* and *plotly*, we actually encountered problems when using *plot_ly* to plot density curves. Since there is not a specific function for density, we need to calculate the density at first and then plot the result points connected with line. This causes some visible differences between the density plot used *ggplotly* and the one used *plot_ly*. Also because of the fixed structure of *plot_ly*, the code is very tedious which need be considered carefully. And two function have different defaults, we sometimes need to take further actions to make them look exact the same, like in histograms, the default boundary for ggplot is not 0 and we need to set the center.
+
+Besides, *plot_ly* provides a more direct interface to *plotly.js* so we can leverage more specialized chart types (such as maps) or even some visualization that the *ggplot2* won’t ever support. It is better suited for more complicated tasks while the tasks *ggplotly* could undertake are more based on *ggplot2*. 
+
+The learning curves for the two tools are pretty different. It is relatively easy to learn and use *ggplotly* because it just need to be added after finishing graphs using *ggplot2*, although it has some fixed structures used to adjust things like legend and label as well. For *plot_ly*, it has a unique and completed structure which needs people to spend time learning, however after some learning, people can use it readily and conveniently. 
+
+For *ggplotly*, the pros of it are easy to learn and easy to use once people have basic knowledge of *ggplot2*. The cons of it are the limitation of itself which makes the truth that not all the graphs created by *ggplot2* could be transferred  to dynamic interactive ones. 
+
+For *plot_ly*, it is appropriate to almost all the dynamic interactive plots. People could use it to plot whatever they want including 3D graphs. However, it takes up a large part of memory which will make the running process very slow. 
+
+The quality of documentations of two tools is pretty similar. They both have arguments explanations and examples included which are very users friendly. Their package *plotly* has been developing for several versions. The latest package version on R is 4.8.0 and news can be found on this website: https://github.com/ropensci/plotly/blob/master/NEWS.md. We can see new features, improvements and bug fixed and therefore, two functions are still in active development.

@@ -10,19 +10,24 @@
 
 [purrr vs. apply](ss5593&fq2150.html)
 
-#### Data Visualization
+#### Data Visualization (static)
 
-[ggmosaic vs. vcd::mosaic](Community_Contribution_group_5.html)
+[geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
 
-[plotly vs. highcharter](kz2324_yz3383.html)
+[ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
 
 [vcd vs. ggplot2](xx2308.html)
 
+#### Data Visualization (interactive)
 
-[Interactive plotting? plotly OR shiny](https://xishi-chen.shinyapps.io/communityC5/)
+[ggplot2 vs. plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
 
-[geom_mosaic() vs. mosaic()](hw2664.html)
+[ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
+
+[plotly vs. highcharter](kz2324_yz3383.html)
+
+[plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
 #### Writing Reports
 
-[GGPlot2 vs. Plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
+
