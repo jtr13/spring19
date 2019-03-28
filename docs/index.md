@@ -11,5 +11,6 @@
 #### Data Visualization
 
 [Plotly vs. Highcharter](kz2324_yz3383.html)
+[ggplotly vs. plot_ly](Community_Contribution-gr2.html)
 
 #### Writing Reports
