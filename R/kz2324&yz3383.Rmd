@@ -1,0 +1,125 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message = FALSE)
+setwd("~/Desktop/5293 Statistical Graphics/Community_Contribution")
+# install.packages("plotly")
+# install.packages("highcharter")
+```
+
+# Package battle: Plotly vs Highcharter
+
+#### Group6: Kaiyan Zheng (kz2324) & Yue Zhang (yz3393)
+
+######  Mar 28, 2019
+
+We are mianly using `plotly` to draw interactive graphics. While there are a bunch of packages could perform the similar tasks. Here we focus on the comparison between `plotly` and `highcharter`. 
+
+Here are the two brief introductions from Google.
+
+- `plotly` is an R package for creating interactive web-based graphs via the open source JavaScript graphing library plotly.js. Plotly graphs are rendered locally through the htmlwidgets framework.
+
+- `highcharter` is a R wrapper for Highcharts javascript libray and its modules. Highcharts is very mature and flexible javascript charting library and it has a great and powerful API.
+
+These two packages can both draw graphics in a simple and elegant way. However, each has their strengths and limits. 
+
+# Heatmap
+
+We use heatmap to show the similarity. We could assign "heatmap" as one of the arguments into the function. However, it's not necessary just like Base R graphic. They can detect the proper way to plot the data which is not the ability that `ggplot` has.
+
+```{r}
+library(plotly)
+library(highcharter)
+data(volcano)
+
+# Ploty
+plot_ly(z = volcano)
+
+# Highcharter
+hchart(volcano) 
+```
+
+# Barchart
+
+`highcharter` has a unique strength to draw interactive Barchart and add 3d effect using a simple argument `options3d = list()` while `ploty` could not add 3d effect.
+
+What's more, it's necessary to reassign the level of months letting it to be in logical level while `highchart` can automatically settle it. 
+
+In this chunck, it's also obvious shown that they are both in layered grammar which is the same with ggplot.
+
+```{r}
+data(citytemp)
+# Ploty
+citytemp$month <- as.factor(citytemp$month)
+levels(citytemp$month) <- month.abb
+
+plot_ly(citytemp, x = ~month, y = ~tokyo, type = 'bar', name = 'tokyo') %>%
+  add_trace(y = ~new_york, name = 'New York') %>%
+  add_trace(y = ~berlin, name = 'Berlin') %>%
+  add_trace(y = ~london, name = 'London') %>%
+  layout(yaxis = list(title = 'Temperature'), barmode = 'group')
+
+# Highcharter
+highchart() %>% 
+  hc_xAxis(categories = citytemp$month) %>% 
+  hc_add_series(name = "Tokyo", data = citytemp$tokyo) %>%
+  hc_add_series(name = "New York", data = citytemp$new_york) %>% 
+  hc_add_series(name = "Berlin", data = citytemp$berlin) %>% 
+  hc_add_series(name = "London", data = citytemp$london) %>% 
+  hc_chart(type = "column", options3d = list(enabled = TRUE, beta = 15, alpha = 15))
+```
+
+## Scatterplot
+
+Both `plotly` and `highcharter` package can plot scatterplot easily. Here we used mpg data set and have some intersting comparision.
+Firstly, by default in `plotly` the legend is assumed as denstiy. For example, in mpg dataset "cyl" has type as int. In plotly, if we directly use the raw data we will get the following result:
+
+```{r}
+plot_ly(mpg, x = ~cty, y = ~hwy, color = ~cyl)
+```
+
+We can see, although we knnow the "cyl" include discrete number, plot_ly will still show us the density legend. And if you want to plot the legend as discrete numbers as it actually is, you need either factorize "cyl" and set the levels manully or use add_markers function.
+
+```{r eval=FALSE, include=FALSE}
+factor.mpg <- mpg
+factor.mpg$cyl <- as.factor(factor.mpg$cyl)
+plot_ly(factor.mpg, x = ~cty, y = ~hwy,color = ~cyl)
+```
+or 
+```{r}
+p <- plot_ly(mpg, x = ~cty, y = ~hwy)
+add_markers(p, color = ~factor(cyl))
+```
+
+However, in this competition hchart() in the `highcharter` package seems to be smarted. You don't need to change anything, it will automatically assume the "cyl" as discrete data. Also in hchart, it shows the group numebr besides the x and y value, while in `plotly` you need to distinguish each group by the color. If you have a lot of groups and very similiar color, maybe using hchart() function will be more explicit.
+
+```{r}
+hchart(mpg, "scatter", hcaes(x = cty, y = hwy, group = cyl))
+```
+
+However, plot_ly can make 3d plot very easily while hchart() funtion cannot produce. From the following plot we can easily rotate the plot to any angle we want. If you are tring to explore the relation between your variables in many dimensions, you shoudl use plot_ly to detect the inner relationship.
+
+# 3d scatterplot
+
+```{r}
+plot_ly(mpg, x = ~cty, y = ~hwy, z = ~cyl) %>%
+  add_markers(color = ~cyl)
+```
+
+# Conclusion
+
+Overall, it seems that `plotly` is more mature. 
+
+- Firstly, it has its own dashboards for users to better manipulate in Rmd file. Comparatively, the chunck for `highcharter` is more like a built-in graphic like Base R Graphic or ggplot.
+
+- Secondly, `plotly` has some more useful methods to better show the features of graphic like its 3d scatterplot while `highcharter` can only add 3d effect.
+
+However, `highcharter` is just like a young but powerful man with fancy ideas. For example, detect what the users want like put months in logical order. After we search the launch day of these two packages, our thoughts were proved that `highcharter` is launched in 2016 and `plotly` in 2012. We sincerely hope more and more innovated packages like `highcharter` appear and improved all the time.
+
+
+
+
+
+
