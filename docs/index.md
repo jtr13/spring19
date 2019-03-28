@@ -12,4 +12,6 @@
 
 [Plotly vs. Highcharter](kz2324_yz3383.html)
 
+[Interactive plotting? plotly OR shiny](https://xishi-chen.shinyapps.io/communityC5/)
+
 #### Writing Reports
