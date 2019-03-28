@@ -12,4 +12,6 @@
 
 [Plotly vs. Highcharter](kz2324_yz3383.html)
 
+[geom_mosaic() vs. mosaic()](hw2664.html)
+
 #### Writing Reports

@@ -1,0 +1,97 @@
+---
+title: "Community Contribution"
+author: "Hao Wu; UNI:hw2664"
+date: "3/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Mosaicplot is a useful way to visualize multivariate categorical data. In R, there are several functions from different packages to draw mosaicplot. In this analysis, I will compare the **geom_mosaic** function from ggmosaic package and the **mosaic** function from vcd function. I will use the built-in dataset called *Titanic* to draw the plots.
+
+## Data description
+
+The *Titanic* dataset summarizes the information on the fate of passengers on the fatal maiden voyage of the ocean liner Titanic. In this dataset, there are four variables, which are Class, Sex, Age and Survived. For **Class** variable, it records which class a passenger belongs to and has four levels, which are first class, second class, third class, and crew members. For **Sex** variable, it has two categories, which are male and female. For **Age** variable, it has two categories, which are child and adult. For **Survived** categories, it records whether the passager survived or not. 
+
+The *Titanic* dataset in R is a 4-dimensional array. it records the number of people in each combination of the four variables. For example, the number of children who did not survive, are male, and belong to first class is 0.
+
+The *Titanic* dataset are shown below.
+
+```{r}
+Titanic
+```
+
+
+## Examples using geom_mosaic function from ggmosaic package
+
+At first, I will use **geom_mosaic** function to draw the mosaicplot. Before drawing the mosaicplot, we need to convert the dataset into data frame since ggplot only accepts data frame. If we directly use the dataset in an array form, R will give us an error, which is *"data must be a data frame, or other object coercible by fortify(), not an S3 object with class table"*.
+
+```{r, message=FALSE}
+library(ggplot2)
+library(ggmosaic)
+#convert array into data frame
+Titanic.df <- data.frame(Titanic)
+```
+
+
+```{r}
+ggplot(data = Titanic.df) +
+  geom_mosaic(aes(weight=Freq, x=product(Class, Sex), fill=Survived), divider = mosaic("v"))
+```
+
+The mosaicplot above shows the Survived variable depends on class and sex. In the **geom_mosaic** function, I define a aesthetic that uses the frequency for the weight of each combination and specifies class and sex as independent variables. I also specify different color to represent the dependent variable by using fill argument. divider argument specifies the direction of the first split is vertical.
+
+It is worth to notice that, we need to set aesthetic in the **geom_mosaic()** instead of **ggplot()**. If we set aesthetic in **ggplot()**, we will get an error, which is *"mapping must be created by aes()"*.
+
+```{r}
+ggplot(data = Titanic.df) +
+  geom_mosaic(aes(weight=Freq, x=product(Class, Sex, Age), fill=Survived), divider = mosaic("v"))
+```
+
+The mosaicplot above shows the Survived variable depends on class, sex, and age.
+
+## Examples using mosaic function from vcd package
+
+Next, I will use **mosaic** function to draw the mosaicplot. Unlike ggplot, the **mosaic** function can directly take the data in an array form, which is convenient.
+
+```{r}
+vcd::mosaic(Survived~Sex+Class, data = Titanic, direction = c("v","v","h"), rot_labels = c(0, 0, 45, 0))
+```
+
+The mosaicplot above shows the Survived variable depends on class and sex. In the **mosaic** function, I define a formula to specify the variables used to create a contingency table from data argument. For the formula, I specify a dependent variable before the tilde sign, and the variables after the tilde sign will be independent variables. Then I specify the direction of each split, "v" for vertical split and "h" for horizontal split. We can use rot_labels to solve overlap issue beween labels.
+
+
+```{r}
+vcd::mosaic(Survived~Sex+Class+Age, data = Titanic, direction = c("v","v","h","h"), rot_labels = c(0, 0, 45, 0))
+```
+
+The mosaicplot above shows the Survived variable depends on class, sex, and age.
+
+## Comparison
+
+For **geom_mosaic()**:
+
+1. we can only specify the direction of the first cut. 
+
+2. we should to convert data into data frame, when we use ggplot.
+
+3. we can only set the aesthetic in geom_mosaic() instead of ggplot(). It is kind of violating the convention of ggplot2 package since for other function we can set aesthetic in either geom funciton or ggplot().
+
+4. it will only use bottom and left axles to make each split, which will become more clear for us to find patterns when there are more than 2 independent variables, just like the second plot drawn by geom_mosaic function.
+
+5. geom_mosaic cannot deal with a number of variables. The solution for this issue is using the *product* funciton when we set the value for x in the aesthetic. [refer: https://cran.r-project.org/web/packages/ggmosaic/vignettes/ggmosaic.html]
+
+
+For **mosaic()**: 
+
+1. we can use *direction* argument to specify the direction of each cut.
+
+2. The data argument can accept data frame or array.
+
+3. There is rot_labels argument in the funciton, thus we can easily rotate labels by certain angle when there is overlap between labels, but for geom_mosaic, we need to use other ggplot2 function to rotate labels manually.
+
+4. mosaic function will use all 4 axles to make each split. when there are only one or two independent variables, we will put independent variables in the top and bottom axles and dependent varialbe in the horzontal axis. It will become much easier to find the pattern or relationship between variables; however, if there are more than two independent variables, the mosaicplot drawn by mosaic function will become confused and hard to find pattern, just like the second plot drawn by mosaic function.
