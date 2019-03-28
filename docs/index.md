@@ -12,4 +12,6 @@
 
 [Plotly vs. Highcharter](kz2324_yz3383.html)
 
+[Tableau vs. R](https://youtu.be/zAH9i60grxs)
+
 #### Writing Reports
