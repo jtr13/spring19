@@ -1,0 +1,239 @@
+---
+title: "5293-Community Contribution"
+subtitle: "Exploration of ggmosaic vs. vcd"
+author: Xiaoqian Xue (xx2308)
+output: html_document
+---
+
+Mosaic plots are useful to visualize multivariate categorical data. In this short article, I will breifly explore two packages that R provides to draw mosaic plots:
+
+1. mosaic function in vcd package
+
+2. geom_mosaic function in ggmosaic & ggplot2 packages
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,
+                      message = FALSE, cache = TRUE)
+library(ggplot2)
+library(ggmosaic)
+library(vcd)
+```
+
+I. Data Background
+
+In this report, I will use the data from the study NYLS97 (National Youth Longitudinal Survey of Youth 1997) (https://www.nlsinfo.org/investigator). The variables I have selected are all from survey year 2015. They are gender, race, age, census region, family's income and highest degree received. I have already done simple cleaning, translated the code to be readable and renamed it as "datanew". 
+
+There are total of 7103 useful data.  I will explore the categorical variables, "Age"(since age is recorded only from 30 to 36, I will treat 6 different ages as categorical levels), "Gender", "Region","highest degree received", "Race", "Income" (income will be separated as 5 categorical levels according to the distribution: -3 to 0 are considered as "in debt", 0 to 17500 as "low", 17500 to 50850 as "medium low", 50850 to 66016 as "medium", 66016 to 92500 as "medium high", 92500 to 329331 as "high". 
+```{r}
+datanew <- read.csv("~/Desktop/datanew.csv")
+```
+II. Mosaic plot using vcd
+
+When using vcd package' function mosaic, it is best to draw the plot incrementally.
+So first, I start with splitting by gender only: 
+```{r}
+mosaic(~Gender, data = datanew)
+```
+
+Spliting on Gender, then Age:
+```{r}
+mosaic(Age~Gender, data = datanew, 
+       labeling_args = list(gp_labels = gpar(fontsize = 8),
+                            gp_varnames = gpar(fontsize = 10),
+                            rot_labels=c(0,0)))
+```
+
+Splitting on Gender, then Age, then Race (Since the name of each race is too long to fit in the graph, I will change the fontsize to be smaller and rotate it to fit the graph): 
+
+```{r}
+mosaic(Race ~ Gender + Age, data = datanew, 
+       spacing = spacing_equal(sp=unit(0,"lines")),
+       labeling_args = list(gp_labels = gpar(fontsize = 6),
+                            gp_varnames = gpar(fontsize = 10),
+                            rot_labels=c(0,0,15)),
+       direction = c("v","h","v"),
+       main = "Mosaic plot using vcd packages")
+```
+
+After adding the third variables, we can still clearly see the distribution and analyze from the graph the ratio of each categorical variable. Then we want to see how the mosaic plot from vcd package performing after adding the fourth variable.
+
+Splitting on Gender, then Age, then Race, then Region: 
+```{r}
+mosaic(Region ~ Race + Gender + Age, data = datanew, 
+       spacing = spacing_equal(sp=unit(0,"lines")),
+       labeling_args = list(gp_labels = gpar(fontsize = 6),
+                            gp_varnames = gpar(fontsize = 10),
+                            rot_labels=c(0,0,0,0)),
+       direction = c("v","h","h","v"),
+       main = "Mosaic plot using vcd packages with four variables")
+```
+
+After adding the fourth variable, it is still clear to see the distribution of those variables and how they are related to each other. Then let us add the fifth variable income to the graph and see how the graph will look like.
+
+Splitting on Gender, then Age, then Race, then Region, then Income: 
+```{r}
+mosaic(Income ~ Region + Race + Age + Gender, data = datanew, 
+       spacing = spacing_equal(sp=unit(0,"lines")),
+       labeling_args = list(gp_labels = gpar(fontsize = 6),
+                            gp_varnames = gpar(fontsize = 10),
+                            rot_labels=c(0,0,15,0,0)),
+       direction = c("v","h","h","h","v"),
+       main = "Mosaic plot using vcd packages with five variables")
+```
+
+Clearly, the graph now is hard to see and R also takes more time to run it. Thus, for more than four variables, mosaic plot from vcd packages does not seem like to be a good option. Let us go back to four variables' mosaic plot, add the last variable Degree into the graph and drop the Gender and Race varibles. 
+
+Splitting on Age, then Region, then Degree, then Income and also add some colors: 
+
+```{r}
+mosaic(Income ~ Degree + Region + Age, data = datanew, 
+       spacing = spacing_equal(sp=unit(0,"lines")),
+       labeling_args = list(gp_labels = gpar(fontsize = 6),
+                            gp_varnames = gpar(fontsize = 10),
+                            rot_labels=c(0,15,60,0)),
+       direction = c("v","h","h","v"),
+       gp=gpar(fill=c("plum1","orchid1","lightpink"), col = "white"),
+       main = "Mosaic plot using vcd packages with four variables")
+```
+
+The graph with four variables looks better than five. To find a better way, let us try another function called geom_mosaic in ggmosaic & ggplot2 packages and see whether it can be improved or not.
+
+III. geom_mosaic function in ggmosaic & ggplot2
+
+Since we have already decided the ordering from previous example(i.e. mosaic function), we only need to graph the mosaic plot in this example using four variables(Age, Region, Degree, Income) and five variables(Gender, Age, Race,  Region, Income) to see whether can improve the unclear version of using vcd package.
+
+Mosaic plot with four variables cut by Region, Age, Income, and Degree, Filled color by Degree:
+```{r}
+ggplot(data = datanew) +
+  geom_mosaic(aes(x = product(Region,Age,Income,Degree), fill = Degree)) + 
+                theme_minimal() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 80, hjust =1),
+          axis.text.y = element_text(size = 6, angle = 20, hjust = 1)) +
+                 labs(x= "Region:Income", y = "Degree:Age",title = 'Mosaic plot with four variables using geom_mosaic function')
+```
+
+Mosaic plot with four variables cut by Gender, Age, Income, and Degree, Filled color by Income:
+```{r}
+ggplot(data = datanew) +
+  geom_mosaic(aes(x = product(Gender, Age, Degree, Income), fill = Income)) + 
+                theme_minimal() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 6, angle = 80, hjust =1),
+          axis.text.y = element_text(size = 6, angle = 20, hjust = 1)) +
+                 labs(x= "Age:Income", y = "Gender:Degree",title = 'Mosaic plot with four variables using geom_mosaic function')
+```
+
+Mosaic plot with five variables cut by Race, Age, Region, Gender and Income, Filled color by Income:
+```{r}
+ggplot(data = datanew) +
+  geom_mosaic(aes(x = product(Race, Age, Region, Gender), fill = Income)) + 
+                theme_minimal() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 5, angle = 80, hjust = 1),
+          axis.text.y = element_text(size = 6, angle = 5, hjust = 1)) +
+                 labs(x="Income:Age:Gender",y="Race:Region",title = 'Mosaic plot with five variables using geom_mosaic function')
+```
+
+IV. Conclusion
+As we have seen from those examples, geom_mosaic from ggplot is graphed as the product of two variables and the different colored area is determined by the products. So it is much clear to visualize the distribution and the plot does not seem to be messy. Also, we are more able to directly see from the five variables plot that the largest portion of our data having medium low income, from South, Non-Black/Non-Hispanic, middle age male. This can be hard to see using the vcd package. 
+
+However, since there are only two axis, compared to the four axis in the vcd package, it can be hard if we want to specific combination of variables. For example, in the vcd's last example, we let degree to be the horizontal axis and the last cut since we want it to be the dependent variable. We can clearly visualize there is a large proportion of high school graduated and among those high school graduated, large portion of high age people from south has medium low income. However, such information is hard to obtained from ggplot. 
+
+Hence, we can conclude that to obtain information from four categorical variables, it is better to use mosaic function from vcd package. To obtain information from five categorical variables, it is better to use geom_mosaic function from ggplot2 package. 
+
+V. Appendix: Below is the data cleaning process
+```{r}
+data <- read.csv("~/Desktop/data.csv")
+colnames(data) <- c("ID", "Gender", "Race","Age","Region","Income","Degree")
+datanew <- data[!data$Age=="-3",]
+datanew <- datanew[!datanew$Age=="-4",]
+datanew <- datanew[!datanew$Age=="-5",]
+datanew <- datanew[!datanew$Region=="-3",]
+datanew <- datanew[!datanew$Region=="-4",]
+datanew <- datanew[!datanew$Region=="-5",]
+datanew <- datanew[!datanew$Income=="-3",]
+datanew <- datanew[!datanew$Income=="-4",]
+datanew <- datanew[!datanew$Income=="-5",]
+datanew <- datanew[!datanew$Degree=="-3",]
+datanew <- datanew[!datanew$Degree=="-4",]
+datanew <- datanew[!datanew$Degree=="-5",]
+for (i in 1:nrow(datanew)) {
+  if(datanew$Gender[i] == "1"){
+    datanew$Gender[i] = "Male" 
+    }
+  else if (datanew$Gender[i] == "2"){
+    datanew$Gender[i] = "Female" 
+  }
+}
+for (i in 1:nrow(datanew)) {
+  if(datanew$Race[i] == "1"){
+    datanew$Race[i] = "Black"
+  }else if(datanew$Race[i] == "2"){
+    datanew$Race[i] = "Hispanic"
+  }else if(datanew$Race[i] == "3"){
+    datanew$Race[i] = "Mixed Race"
+  }else if(datanew$Race[i] == "4"){
+    datanew$Race[i] = "Non-Black / Non-Hispanic"
+  }
+}
+
+for (i in 1:nrow(datanew)) {
+  if(datanew$Region[i] == "1"){
+    datanew$Region[i] = "NE"
+  } else if (datanew$Region[i] == "2"){
+    datanew$Region[i] ="NC"
+  }else if (datanew$Region[i] == "3"){
+    datanew$Region[i] = "S"
+  }else if (datanew$Region[i] == "4"){
+    datanew$Region[i] = "W"
+  }
+}
+
+for (i in 1:nrow(datanew)) {
+  if(datanew$Degree[i] == "0"){
+    datanew$Degree[i] = "None"
+  } else if (datanew$Degree[i] == "1"){
+    datanew$Degree[i] ="Ged"
+  }else if (datanew$Degree[i] == "2"){
+    datanew$Degree[i] = "High school"
+  }else if (datanew$Degree[i] == "3"){
+    datanew$Degree[i] = "AA"
+  }else if (datanew$Degree[i] == "4"){
+    datanew$Degree[i] = "BA/BS"
+  }else if (datanew$Degree[i] == "5"){
+    datanew$Degree[i] = "MA/MS"
+  }else if (datanew$Degree[i] == "6"){
+    datanew$Degree[i] = "PhD"
+  }else if (datanew$Degree[i] == "7"){
+    datanew$Degree[i] = "DDS/JD/MD"
+  }
+}
+
+for (i in 1:nrow(datanew)) {
+  if(datanew$Income[i] < 0){
+    datanew$Income[i] = "in debt"
+  } else if(datanew$Income[i] >= 0 && datanew$Income[i] < 17500){
+    datanew$Income[i] = "low"
+  }else if(datanew$Income[i] >= 17500 && datanew$Income[i] < 50850){
+    datanew$Income[i] = "meidum low"
+  }else if(datanew$Income[i] >= 50850 && datanew$Income[i] < 66016){
+    datanew$Income[i] = "meidum"
+  }else if(datanew$Income[i] >= 66016 && datanew$Income[i] < 92500){
+    datanew$Income[i] = "meidum high"
+  }else if(datanew$Income[i] >= 92500){
+    datanew$Income[i] = "high"
+  } 
+}
+for (i in 1:nrow(datanew)) {
+  if(datanew$Age[i] < 32){
+    datanew$Age[i] = "low"
+  } else if(datanew$Age[i] >= 32 && datanew$Age[i] < 34){
+    datanew$Age[i] = "mid"
+  } else if (datanew$Age[i] >= 34){
+    datanew$Age[i] = "high"
+  }
+}
+write.csv(datanew, file = "~/Desktop/datanew.csv", row.names=F)
+```
