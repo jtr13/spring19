@@ -6,7 +6,9 @@
 
 #### Data Import
 
-#### Data Transformation
+#### Data Manipulation
+
+[Data table and more](Community_Contribution_cy2507&zy2327.html)
 
 [purrr vs. apply](ss5593&fq2150.html)
 
