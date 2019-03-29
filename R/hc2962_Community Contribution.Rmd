@@ -1,0 +1,75 @@
+---
+title: "Community Contribution"
+author: "Haofeng Chen"
+date: "3/25/2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+setwd("~/Desktop/GR5206/Homework/HW1")
+titanic <- read.table("Titanic.txt",as.is = TRUE,header = TRUE)
+```
+
+Filter out NA entry 
+```{r}
+titanic <- titanic[!is.na(titanic$Age),]
+write.csv(titanic,'titanic_clean.csv')
+for (i in 1:nrow(titanic)){
+  if (titanic$Survived[i] == 0){titanic$Survived_Status[i] <- "dead"}
+  else {titanic$Survived_Status[i] <- "survived"}
+}
+```
+
+Bar Chart
+```{r}
+library(ggplot2)
+ggplot(titanic)+
+  geom_bar(mapping = aes(Pclass))
+color = c("#ff99ff", "#cc9966")
+ggplot(titanic)+
+  geom_bar(mapping = aes(Pclass,fill = Sex))+
+  scale_fill_manual(values = color)
+```
+
+Histogram
+```{r}
+ggplot(titanic)+
+  geom_histogram(mapping = aes(Age),binwidth = 5)
+```
+
+
+Boxplot
+```{r}
+library(ggplot2)
+library(tidyverse)
+ggplot(titanic, aes(Sex, Fare)) + geom_boxplot()+
+  ggtitle("Overall Boxplot")
+
+titanic_class_1 = titanic[titanic$Pclass == 1,]
+titanic_class_2 = titanic[titanic$Pclass == 2,]
+titanic_class_3 = titanic[titanic$Pclass == 3,]
+ggplot(titanic_class_1, aes(Sex, Fare)) + geom_boxplot()+
+  ggtitle("Class 1 Boxplot")
+ggplot(titanic_class_2, aes(Sex, Fare)) + geom_boxplot()+
+  ggtitle("Class 2 Boxplot")
+ggplot(titanic_class_3, aes(Sex, Fare)) + geom_boxplot()+
+  ggtitle("Class 3 Boxplot")
+```
+
+Mosaic
+```{r}
+library(vcd)
+vcd::mosaic(Sex~ Survived_Status + Pclass, titanic,
+            direction = c("v", "v", "h"),
+            labeling = labeling_border(rot_labels = c(0, 0, 45, 0)))
+```
+
+Couple noted comparision: 
+
+1) R is ideal for data cleaning while Tableau is designed for visualizing tidy data. For example, Tableau may have a hard time reading data in txt format. 
+
+2) In terms of bar chart, Tableau is mainly clicking and dragging variables using mouse with optional coding, whereas Rstuidio is all coding. Therefore, if you want to take a look at certain graph quickly, Tableau will be a ideal software. However, if you need complicate data cleaning or manipulation (grouping,selecting), RStudio perhaps will be more optimal.
+
+3) The choices of graphs are suggested in Tableau, however, this could limited your graphing choices. For example, Tableau just don't have mosaic plot, and since it is not a open source programming language, you can only count on Tableau's in-house development team to provide mosaic plot in the future. However, this is not the case for RStudio, given the fact that it is a open-source programming language. 

@@ -18,7 +18,7 @@
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
 
-[Tableau vs. R](https://youtu.be/zAH9i60grxs)
+[Tableau vs. R](hc2962_Community_Contribution.html)  [video](https://youtu.be/zAH9i60grxs) 
 
 [vcd vs. ggplot2](xx2308.html)
 
