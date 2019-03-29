@@ -1,0 +1,88 @@
+---
+title: "The comparison between Leaflet and Parallel Coordinate in R"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+
+###Introduction
+```{r }
+library(dplyr)
+library(leaflet)
+library(ggplot2)
+library(geojsonio)
+library(tigris)
+library(parcoords)
+```
+
+Leaflet is a powerful map library from JavaScript. Users can use leaflet map to explore interesting patterns of different kinds of dataset such as rentals,traffic,air quality,restaurant and crime. 
+
+
+```{r}
+traffic <- read.csv('traffic.csv')
+```
+
+###Leaflet
+
+First let's explore a new york city traffic density dataset based on UHF42 Neighborhood from Environment & Health Data Portal.
+
+```{r}
+UHF42<- geojsonio::geojson_read("UHF42.json",what = 'sp')
+
+tf <- traffic %>%filter(name == "Traffic Density- Annual Vehicle Miles Traveled")%>%select(geo_entity_id,data_value)
+
+mapdf<-geo_join(UHF42,tf,"id","geo_entity_id")
+mapdf@data <- mapdf@data %>% na.omit()
+
+pal <- colorNumeric(
+  palette = "YlOrRd",
+  domain = mapdf@data$data_value)
+
+leaflet(mapdf) %>%setView(-73.98, 40.75, zoom = 10)%>%
+  #addProviderTiles("Esri") %>% 
+addTiles()%>%
+addPolygons(color=~pal(data_value),stroke = FALSE, 
+            smoothFactor = 0.1, fillOpacity = 0.8,popup = ~GEONAME)%>%
+addLegend("bottomright", pal = pal, values = ~data_value,
+          title = "traffic density",opacity = 1)
+
+```
+
+By exploring traffic density in new york city neighborhood, we can clearly see that Manhattan has the highest traffic density and it makes sense since it's one of the most busiest city in the world.
+
+### Parallel Coordinate
+So far, we have seen that leaflet is really impressive and it visualizes data in a very clear and beautiful way that Parallel Coordinate cannot compete with. However, Parallel Coordinate still has it's advantage over leaflet. 
+
+Let's see what Parallel Coordinate can do.
+
+```{r}
+pa <-mapdf@data
+pa <- pa %>% select(GEONAME,data_value,BOROUGH)
+colnames(pa) <-c("Neighborhood","Traffic Density", "Borough") 
+pa %>%parcoords(
+          rownames = F 
+          , brushMode = "1D-axes"
+          , reorderable = T
+          , queue = T
+          , color = list(
+            colorBy = "Borough"
+            ,colorScale = htmlwidgets::JS("d3.scale.category10()")),width = 900,height = 500)
+```
+
+It's obvious that parallel coordinate plot shows more detail information than leaflet map. For example, if we want to find out where the traffic density is below value 30, we can just select the range below 30 on Traffic Density column and select all ranges of the other two columns. Now we can explore which neighborhood in New York City has low traffic density. So we can explore neighborhood based on different range of traffic density easily using parrallel coordinate plot. However, we can't see exact value of traffic density by just looking at leaflet map.
+
+
+### Conclusion
+The big difference of using Leaflet and Parallel Coordinate to show patterns of the traffic density is that Leaflet gives a visual impulse that makes users easily identify where has the highest or lowest traffic density based on color range of each neighborhood and Parallel Coordinate is more interactive and provides more specific details such as value of traffic density for users to customize and explore themselves. So, if we combine these two great way of showing dataset patterns, we will find out more interesting information.
+

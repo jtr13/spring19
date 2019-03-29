@@ -32,6 +32,8 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+[Leaflet vs. Parcoords](xx2295.html)
+
 #### Writing Reports
 
 
