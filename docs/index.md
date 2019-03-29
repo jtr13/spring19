@@ -22,7 +22,7 @@
 
 #### Data Visualization (interactive)
 
-[Dygraphs vs. Plotly vs. Tableau for time series](group8.html)
+[dygraphs vs. plotly vs. Tableau (time series)](group8.html)
 
 [ggplot2 vs. plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
 
