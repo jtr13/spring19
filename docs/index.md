@@ -30,6 +30,8 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+[Dygraphs vs. Plotly vs. Tableau for time series](Community Contribution group#8.html)
+
 #### Writing Reports
 
 
