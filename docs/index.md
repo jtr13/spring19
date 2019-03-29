@@ -16,11 +16,13 @@
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
 
+[R vs. Tableau (maps)](project_cc.html)
+
 [Tableau vs. R](https://youtu.be/zAH9i60grxs)
 
 [vcd vs. ggplot2](xx2308.html)
 
-[R vs. Tableau in Mapping](project_cc.html)
+
 
 #### Data Visualization (interactive)
 
