@@ -25,6 +25,7 @@
 
 [vcd vs. ggplot2](xx2308.html)
 
+[heatmap (1.MASS package in Base R, 2.plot_ly package, 3.ggplot2 package)] (Community_Contribution%20Group20.html)
 
 #### Data Visualization (interactive)
 
