@@ -6,9 +6,12 @@
 
 #### Data Import
 
-#### Data Transformation
+#### Data Manipulation
+
+[Data table and more](Community_Contribution_cy2507&zy2327.html)
 
 [purrr vs. apply](ss5593&fq2150.html)
+
 
 #### Data Visualization (static)
 
@@ -16,12 +19,11 @@
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
 
+[R vs. Tableau](hc2962_Community_Contribution.html)  [video](https://youtu.be/zAH9i60grxs) 
+
 [R vs. Tableau (maps)](project_cc.html)
 
-[Tableau vs. R](https://youtu.be/zAH9i60grxs)
-
 [vcd vs. ggplot2](xx2308.html)
-
 
 
 #### Data Visualization (interactive)
@@ -33,6 +35,8 @@
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
+
+[Leaflet vs. Parcoords](xx2295.html)
 
 #### Writing Reports
 
