@@ -30,7 +30,7 @@
 
 [dygraphs vs. plotly vs. Tableau (time series)](group8.html)
 
-[ggplot2 vs. plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
+[ggplot2 vs. plotly (stock charts)](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
 
 [ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
 
