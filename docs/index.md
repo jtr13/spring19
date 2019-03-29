@@ -20,6 +20,8 @@
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
 
+[vcd::mosaic and ggmosaic::geom_mosaic](Community_Contribution_xs2291.html)
+
 [R vs. Tableau: (R portion)](hc2962_Community_Contribution.html)  [(Tableau video)](https://youtu.be/zAH9i60grxs) 
 
 [R vs. Tableau (maps)](project_cc.html)
