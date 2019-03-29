@@ -14,6 +14,8 @@
 
 [tidyr vs. reshape2](hx2259_qz2351.html)
 
+[Base R vs. tidyverse](Community_contribution.html)
+
 #### Data Visualization (static)
 
 [geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
