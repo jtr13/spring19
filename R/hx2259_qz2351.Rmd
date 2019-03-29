@@ -1,0 +1,188 @@
+---
+title: "tidyr vs reshape2"
+author: "Haiqing Xu(hx2259); Qingyu Zhang(qz2351)"
+date: "March 28, 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load library, include = FALSE, warning = FALSE}
+library(tidyr)
+library(reshape2)
+library(tibble)
+library(dplyr)
+```
+
+## 1. General Introduction
+
+According to the R Documentation, *tidyr* is "is designed specifically for tidying data, not general reshaping (*reshape2*)". The documentation also says *tidyr* is a replacement for *reshape2*. In fact, when we check the development version of both packages on Github, *tidyr* is still under active development while the last commit to the *reshape2* was in 2017.
+
+In this post, we will try to compare these two packages to see what they have in common and how they complement each other. One common need in data reshaping/tidying is the transformation between long form and wide form. Let's illustrate the meaning of "long" and "wide" with examples.
+
+Most data we observe today are probably in the wide form. In a wide form, the multiple measures of a single observation are stored in a single row. For example, the following crime data is in wide form.
+
+```{r, echo = FALSE}
+crime <- USArrests
+crime <- rownames_to_column(crime, var = "State")
+head(crime)
+```
+
+For each state, we have 4 measures: Murder, Assault, UrbanPop and Rape. Then let's look at the same dataset after being transformed into long form. In the long form, each row corresponds to one measure on one observation, as shown below.
+
+```{r, echo = FALSE}
+head( gather(crime, key = Measure, value = Value, -State))
+```
+
+In *tidyr*, it does not define what long form and wide form are. It classifies data into tidy data and messy data. The long form data shown above is tidy data because it satisfies three criteria:
+
+1) Each variable must have its own column.
+
+2) Each observation must have its own row.
+
+3) Each value must have its own cell.
+
+All other forms of data are called messy data.
+
+At first, reshaping data into long form(or tidy form) may seem weird, but such data is easier to work with when we need to summaraise data with *dplyr*.
+
+Now we have defined some key terms. Let's start comparing some functions from the two packages that can perform similar task.
+
+## 2. gather() vs melt()
+
+Obviously, both of them transform the data from wide form to long form.
+
+Here we continue to use the crime dataset. We first compare by running both functions over the data without any further parameter.
+
+```{r}
+head(gather(crime))
+```
+```{r}
+head(melt(crime))
+```
+
+We could see that the **gather()** function only uses the first column to create the key-value pair, which is not what we want.
+
+On the other hand, **melt()** function treat "State" as an "id variable" and produces a correct long form dataset. It seems that if **melt()** function does not receive any id.variable, it will select a factor of character column as id variable.
+
+In order to get the same result, we need to assign the id.variable for both functions as below.
+
+```{r}
+crime.l <- gather(crime,Measure,Value,-State)
+head(crime.l)
+```
+```{r}
+head(melt(crime,variable.name="Measure",value.names="Value",id.vars = "State"))
+```
+
+But you could only get the same output on data frames. As what has been shown below, **gather()** function could not work on arrays or matrices but **melt()** function could.
+
+```{r}
+set.seed(6)
+matrices <- matrix(rnorm(6),ncol=2)
+matrices
+
+#gather(matrices)   comment in order to knit..
+# if not comment, 'Error in UseMethod("gather_") : no applicable method for 'gather_' applied to an object of class "c('matrix', 'double', 'numeric')"' will be shown. 
+```
+
+```{r}
+melt(matrices)
+```
+
+## 3. spread() vs dcast()
+
+Obviously, both transform the data from long form to wide form.
+
+```{r}
+crime.dcast <- dcast(crime.l,State ~ Measure, value.var = "Value")
+head(crime.dcast)
+```
+
+The **dcast()** function uses a formula to describe the shape of the data. The arguments on the left side to the '~' (State) refer to the ID variables and the arguments on the right to the '~' refer to the variable to swing(into column names). 'value.var=' assign the measured variables.
+
+```{r}
+crime.spread <- spread(crime.l,Measure,Value)
+head(crime.spread)
+```
+
+The **spread()** function is complementary to **gather()**. The arguments of key and value are column names or positions. Unlike **dcast()** function, no formula argument is needed in **spread()** function. 
+
+In addition, reshape2 has **acast()** function that has the similiar function as **dcast()**, the only difference is **acast()** works on array or matrix and **dcast()** works on data frame. However, **spread()** does not work on array or matrix and tidyr do not have other similar functions that could work on array or matrix. 
+
+```{r}
+#spread(m,Var1,Var2,value)   comment in order to knit...
+#If not commented, 'Error in UseMethod("spread_") : no applicable method for 'spread_' applied to an object of class "c('matrix', 'double', 'numeric')"' will be shown.
+```
+
+
+## 4. separate() vs colsplit()
+
+Sometimes we have messy data where two variables are stored in the same column. In this case, we may want to split the column into multiple columns.
+
+```{r, echo = FALSE}
+messy <- data.frame("Name" = c("John", "Brandon", "Anna"),
+                    "Gender_Score" = c("Male_89", "Male_75", "Female_80"))
+messy
+```
+
+In this dataset, we can see that for each person, the measure "gender" and "score" are stored in one column. Using **colsplit()** from *reshape2*, we can split this column.
+
+```{r}
+tidy <- colsplit(messy$Gender_Score, "_", c("Gender", "Score"))
+tidy
+```
+
+Notice that **colsplit** only returns the splitted columns. It does not automatically keep all the columns in the original dataset. To have the "Name" column back in the dataset, we need to combine the columns by ourselves.
+
+```{r}
+tidy <- cbind(messy$Name, tidy)
+colnames(tidy)[1] <- "Name"
+tidy
+```
+
+In comparison, using **separate()** from *tidyr* gives us the option to keep all columns except the column to be splitted, which saves us some time.
+```{r}
+separate(messy, Gender_Score, into = c("Gender", "Score"), sep = "_", remove = TRUE)
+```
+
+## 5. Bigger picture
+
+As stated before, *tidyr* is a package specifically designed for data tidying. Therefore, in addition to data reshaping, it has quite a few functions that helps you clean data: **complete()**, **drop_na()** etc. These functions could be particularly useful when you use *tidyr* and **dplyr** together. Let's say we have a datasets that records the number of customers visiting the stores. 
+
+```{r, echo = FALSE}
+visit <- data.frame("week" = c("week1", "week2", "week1"),
+                    "time" = c("morning", "afternoon", "afternoon"),
+                    "n_of_customers" = c(267,25, 199) )
+visit
+```
+
+It seems we are missing one possible combination: week2 and morning . This is probably because nobody visited the store on the mornings in week2. However, we still want to see this combination in our dataset. The following code shall work.
+
+```{r}
+complete(visit,week,time, fill = list(n_of_customers=0))
+```
+
+As for *reshape2*, it does have some functions for general data reshaping that has no equivalents in *tidyr*. Notice that **gather()** and **spread()** only work for data frame. However, *reshape2* allows us to work with other data types such as array and list through functions like **melt.array()** and **melt.list()**.
+
+## 6. Conclusion
+
+In conclusion, *tidyr* and *reshape2* do complement each other in the following ways:
+
+1) **gather()** and **melt()**: similar, but melt() can automatically identify id variable without further arguments passed into the function.
+
+2) **spread()** and **dcast()**: similar.
+
+3) **separate()** vs **colsplit()**: separate() can keep all columns after splitting.
+
+4) *reshape2* has functions that can work with array or list while *tidyr* functions only work with data frame.
+
+5) *tidyr* has additional functions to clean data: **complete()**, **drop_na** etc.
+
+
+
+

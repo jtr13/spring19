@@ -6,12 +6,13 @@
 
 #### Data Import
 
-#### Data Manipulation
+#### Data Transformation
 
 [Data table and more](Community_Contribution_cy2507&zy2327.html)
 
 [purrr vs. apply](ss5593&fq2150.html)
 
+[tidyr vs. reshape2](hx2259_qz2351.html)
 
 #### Data Visualization (static)
 
