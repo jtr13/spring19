@@ -1,0 +1,153 @@
+---
+title: 'Community Contribution group 5'
+author: "Yifei Bi_yb2456, Xinyi Chen_xc2464"
+date: "3/25/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+###COMPARISON - ggmosaic::geom_mosaic VS. vcd::mosaic
+
+A mosaic plot is a graphical display that allows us to examine the relationship among two or more categorical variables. R provides several packages/functions to draw mosaic plots. Here, we are comparing ggmosaic::geom_mosaic with vcd::mosaic.
+
+####Packages loading:
+
+```{r, message=FALSE, error=FALSE}
+library(vcd)
+library(ggplot2)
+library(ggmosaic)
+library(mosaicData)
+library(tidyverse)
+library(dplyr)
+library(plyr)
+```
+
+####Prepare the data:
+
+We are using Galton's dataset of parent and child heights from package "mosaicData". In this data set, we have 898 observations on 6 variables including family, father, mother, sex, height, nkids. (family is a factor with levels for each family; father represents the father's height; mother represents the mother's height; sex represents the child's sex; height represents the child's height as an adult; nkids is the number of adult children in the family.) 
+
+First of all, we processed the dataset by grouping the family and child's sex, then calculating average height for each sex within each family.
+
+Second, dividing father's, mother's and child's heights in 3 categories respectively based on quantile (less than 25%, 25%-50%, greater than 50%) and relabled them.
+
+```{r, message=FALSE, error=FALSE}
+data("Galton")
+data <- Galton %>% group_by(family,sex) %>% select(father, mother, sex, height) %>% mutate(height = mean(height))
+
+quantile(Galton$father)
+quantile(Galton$mother)
+quantile(Galton$height)
+```
+
+####Data Processing
+```{r}
+height_f <- function(x){
+  if(x<68) return('<68') else
+    if(x<=71) return('68-71') else
+      return('>71')
+}
+
+data$father <- aaply(Galton$father,1,height_f)
+
+height_m <- function(x){
+  if(x<63) return('<63') else
+    if(x<=65.5) return('63-65.5') else
+      return('>65.5')
+}
+data$mother <- aaply(Galton$mother,1,height_m)
+
+height_c <- function(x){
+  if(x<64) return('<64') else
+    if(x<=69.7) return('64-69.7') else
+      return('>69.7')
+}
+data$height <- aaply(Galton$height,1,height_c)
+data <- data[,-1]
+```
+
+####geom_mosaic with ggplot: 
+
+Generally we use number intervals as labels; however, when using geom_mosaic, even though the plot looks neat and clean, labels are confusing. Unlike vcd::mosaic, geom_mosaic does not present the name of each axis. 
+ 
+```{r}
+ggplot(data = data)+
+  geom_mosaic(aes(x = product(height,father,sex,mother), fill=height))+
+  theme(axis.text.x=element_text(angle=35)) + ggtitle("f(height,sex, father, mother)")
+```
+ 
+geom_mosaic also allows us to select some variable to condition on. In this case, we choose to conditioned on father and mother's heights, the plot was faceted by child's height and sex. The conditional plot is hard to read as well. **Thus, furthur processes are needed.**
+
+```{r}
+ggplot(data = data)+
+geom_mosaic(aes(x = product(height, sex), fill=height, conds = product(father, mother)))+
+theme(axis.text.x=element_text(angle=35)) + ggtitle("height,sex condition on father, mother")
+```
+
+
+```{r, message=FALSE, error=FALSE,echo=FALSE}
+data <- Galton %>% group_by(family,sex) %>% select(father, mother, sex, height) %>% mutate(height = mean(height))
+
+height_f <- function(x){
+  if(x<68) return('<68') else
+    if(x<=71) return('68-71') else
+      return('>71')
+}
+
+data$father <- aaply(Galton$father,1,height_f)
+
+height_m <- function(x){
+  if(x<63) return('<63') else
+    if(x<=65.5) return('63-65.5') else
+      return('>65.5')
+}
+data$mother <- aaply(Galton$mother,1,height_m)
+
+height_c <- function(x){
+  if(x<64) return('short') else
+    if(x<=69.7) return('median') else
+      return('tall')
+}
+data$height <- aaply(Galton$height,1,height_c)
+data <- data[,-1]
+```
+
+After reprocessing the labels, the plot became clearer and more readable; however, we noticed that geom_mosaic is not adequte for plotting much variables. Since the whole plot is divided to too many pieces, which make it hard for readers to find the information that they want. Thus, when there are more than 3 variables, general vcd::mosaic plot may be a more proper choice. 
+
+```{r}
+ggplot(data = data)+
+  geom_mosaic(aes(x = product(height,father,sex,mother), fill=height))+
+  xlab("father:mother")+
+  ylab("height:sex")+
+  theme(axis.text.x=element_text(angle=35)) + ggtitle("f(height,sex, father, mother)")
+```
+
+However, for 3 or less variables, geom_mosaic will be better than vcd::mosaic. We chose 3 variables: height, father, mother to draw in the following mosaic plot. As we can see, the format of this plot is quite clear and easy to get information.
+
+```{r}
+ggplot(data = data)+
+  geom_mosaic(aes(x = product(father, height,mother), fill=height))+
+  xlab("father:mother")+
+  ylab("height")+
+  theme(axis.text.x=element_text(angle=45)) + ggtitle("f(height,father,mother)")
+```
+
+
+####vcd mosaic:
+
+vcd::mosaic plot is good and easy for quick drawing and the name of each axis are generated automatically. Moreover, it can handle relativly more variables after rearranging the order or color of plot comparing with geom_mosaic.
+
+```{r}
+vcd::mosaic(height~father+mother+sex, data = data, direction = c("v","v","h","h"),labeling = labeling_border(rot_labels = c(0, 0, 45)),gp = gpar(fill=c('salmon', 'lightblue'),col="white"))
+```
+
+###CONCLUSION:
+
+Both geom_mosaic and vcd::mosaic can show information between categorical variables. Geom_mosaic plot generates clean plot with facets, but we should avoid plotting with large number of variables. Geom_mosaic can also draw plots of conditional variables. Vcd::mosaic is much easier to plot and read if we process our data beforehand.
+
