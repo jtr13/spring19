@@ -22,6 +22,8 @@
 
 #### Data Visualization (interactive)
 
+[Dygraphs vs. Plotly vs. Tableau for time series](Community_Contribution_group#8.html)
+
 [ggplot2 vs. plotly](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
 
 [ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
@@ -29,8 +31,6 @@
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
-
-[Dygraphs vs. Plotly vs. Tableau for time series](Community Contribution group#8.html)
 
 #### Writing Reports
 
