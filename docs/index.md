@@ -7,7 +7,7 @@
 #### Data Import
 
 #### Data Transformation
-[tidyr vs reshape2](hx2259_qz2351.html)
+[tidyr vs. reshape2](hx2259_qz2351.html)
 
 #### Data Visualization
 
