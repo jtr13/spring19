@@ -1,0 +1,79 @@
+---
+title: "EDA proj"
+author: "JIE LI, Xiaofan Zhang"
+date: "March 22, 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+##1. Introduction
+A time-series plot is a data visualization tool that illustrates data points at successive intervals of time. Each point on the chart corresponds to both a time and a quantity that is being measured.
+
+In R, Dygraphs provides rich facilities for charting time-series data, and includes support for many interactive features including series/point highlighting, zooming, and panning.
+
+In Python, Plotly library can be used to plot interactive plots. We will plot geographical data using plotly and will explain how user can interact with such plots.
+
+In Tableau, it is convenient to make interactive time series plots, where time series data can be easily identified. Additionally, Tableau provide time series analysis.
+
+In this paper, we will compare these approaches using time-series data set with two discrete variables.
+
+##2. Data
+We are using central park weather data comes from National Climatic Data Center. NOAA's National Centers for Environmental Information (NCEI) is responsible for preserving, monitoring, assessing, and providing public access to the Nation's treasure of climate and historical weather data and information. Our data contains daily maximum and minimum temperature between 2009-01-01 and 2018-06-03.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+```{r,results='hide', message=FALSE, warning=FALSE}
+library(dygraphs)
+library(xts)
+library(purrr)
+```
+
+```{r}
+data = read.csv("./central_park_weather.csv")
+subdata = data[, c("DATE", "TMAX", "TMIN")]
+subdata$DATE = as.character(subdata$DATE) %>% as.Date
+
+subdata = xts(x = subdata[,-1], order.by = subdata$DATE)
+head(subdata)
+```
+
+##3. Dygraphs for R
+The dygraphs package is an R interface to the dygraphs JavaScript charting library. We converted time-series variable to date type using xts function, and call dygraphs function to produce an interactive time-series plot. It provides rich facilities for charting time-series data in R, including:
+
+Automatically plots xts time series objects (or any object convertible to xts).
+Friendly input data frame and implement by default function to produce plots.
+Highly configurable axis and series display (including optional second Y-axis).
+Rich interactive features including zoom/pan and series/point highlighting.
+Seamless embedding within R Markdown documents and Shiny web applications.
+
+
+```{r}
+dygraph(subdata, main = "New York Temperatures") %>% 
+  dyRangeSelector(dateWindow = c("2009-01-01", "2011-09-27")) %>%
+  dyOptions(colors = c("#FF6347", "#6495ED"))
+```
+
+##4. Plotly for Python
+We import the plot() function from the plotly.offline module. To plot interactive plots using Pandas dataframe, we simply need to call the iplot() method. It also provides some powerful function for time-series data in Python, including:
+•	Hover over the plot to indicate value changing, and each data observation
+•	Zoom in and zoom out of the plot using the options available at the right corner
+•	Highly configurable axis and series display (including optional second Y-axis).
+•	Distribute plots and provide very powerful UI system to visualize results without code
+•	Embedding within jupyter notebook documents and web applications.
+
+##5. Tableau
+We firstly load the dataset into Tableau and then add Date, Tmax and Tmin to view. Tableau will generate interactive time series plot automatically. By simply clicks, you can easily change any aesthetic features of plot such as color, size and also change measures of data you want to view and group by different date units. Tableau allows users:
+•	Quickly create interactive plots and provide user-friendly UI to distribute visualization with no code
+•	Edit aesthetic features of plots such as color and data type by simple clicks 
+•	Provide advanced time series analysis such as statistic summary, modelling and also allowed users customize them
+•	Enabled users to set their own zooming in/out and date sliding, which is more complex than Python or R though
+•	Easily edit different measure of data shown in plot, such as maximum or average and resample data into different date units
+
+
+##6. Conclusion
+To summary, R, Python packages and Tableau are doing very great job to provide impressive interactive plots. Dygraphs is the simplest way to implement the plots, and the package is providing useful functions to help convert data and visualization. On the other hand, Plotly is amazing as well as Dygraphs because it not only produces highly interactive plots, also creates a powerful UI system for non-programmer to share the results. Tableau is a powerful tool to generate interactive plot with high speed and can perform basic calculation without code.
+
+
+
