@@ -32,6 +32,8 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+[Plotting Scatterplot matrices in R](Community Contribution Group#16.html)
+
 #### Writing Reports
 
 
