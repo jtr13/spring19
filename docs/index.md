@@ -24,6 +24,8 @@
 
 [ggmosaic::geom_mosaic() vs. vcd::mosaic() (3)](Community_Contribution_xs2291.html)
 
+[Plotting sequential discrete data: Stem plot in R vs. Python](ja3076_communitycontribution.html)
+
 [R vs. Tableau: (R portion)](hc2962_Community_Contribution.html)  [(Tableau video)](https://youtu.be/zAH9i60grxs) 
 
 [R vs. Tableau (maps)](project_cc.html)
