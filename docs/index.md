@@ -18,6 +18,8 @@
 
 #### Data Visualization (static)
 
+[base R graphics vs. ggplot2](cc4317.html)
+
 [geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
@@ -32,7 +34,7 @@
 
 [vcd vs. ggplot2](xx2308.html)
 
-[heatmap (1.MASS package in Base R, 2.plot_ly package, 3.ggplot2 package)] (Community_Contribution%20Group20.html)
+
 
 #### Data Visualization (interactive)
 
@@ -42,6 +44,8 @@
 
 [ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
 
+[MASS vs. plotly vs. ggplot2 (heatmaps)](Community_Contribution%20Group20.html)
+
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
@@ -49,6 +53,7 @@
 [Leaflet vs. Parcoords](xx2295.html)
 
 [Leaflet vs. Tableau](Community_contribution-group25.html)
+
 
 #### Writing Reports
 
