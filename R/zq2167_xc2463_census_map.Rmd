@@ -1,0 +1,199 @@
+---
+title: "Census graph comparison of choroplethr, ggplot2 and tamp"
+author: "Xiwen Chen UNI:xc2463     Zeyu Qiu UNI:zq2167"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      error = FALSE)
+```
+
+
+#Introduction
+  For the community contribution, we want to compare three different ways of drawing census graph for The United States. The three different methods are choroplethr, ggplot2, and tmap. We will use the basic R dataset state.x77 to demonstrate how to draw the the graph using those methods and provide the pros and cons of three methods in our personal experience perspective.
+
+###Loading all the libraries.
+```{r}
+library(sf)          # classes and functions for vector data
+library(REmap) #A package sepcified for China that we think people might be interested in.
+library(choroplethr) #package for choroplethr tool
+library(maps) # Display of maps, contains map_data function which can "easily turn data from the maps package in to a data frame suitable for plotting with ggplot2". 
+library(tmap) #package for tmap graph tool
+library(tidyverse) #basic data manipulate 
+```
+
+
+#Comparison
+##Choroplethr
+  The choroplethr would be considered as the easiest way of drawing the census graph. However, as a trade-off, it loses the flexibility that the other two methods have. For choroplethr, we only need to provide the name of states and the inforamtion we want to draw on the graph.
+
+```
+https://arilamstein.com/documentation/choroplethr/reference/index.html
+https://edav.info/maps.html#choropleth-maps
+```
+
+For the package itself contains the population information for us in *df_pop_state*
+```{r}
+data(df_pop_state)
+state_choropleth(df_pop_state, title="2012 Population in US by states", legend="Population")
+```
+
+Draw information that we want to know. 
+```{r}
+choroplethe_Income_data <- state.x77 %>% as.data.frame() %>% 
+  rownames_to_column("state") %>%
+  transmute(region = tolower(`state`), value = Income)
+state_choropleth(choroplethe_Income_data, title="2012 Income in US by states", legend="Income")
+
+```
+
+You can also draw the graph for country using **county_choropleth** and the graph for world using **country_choropleth**. You can also draw graph for a sepcific country as long as it is in the package **choroplethrAdmin1** with function **admin1_choropleth** (Example can be found in: https://rdrr.io/cran/choroplethr/man/admin1_choropleth.html).
+
+###Disadvantage
+Since all the functions are pre-determined, we cannot add more countries or it might be missing in the data. Compared with ggplot2, we can also find one more disadvantage that ggplot2 works with dataframe, so we don't need to create an aaddtional dataset for different information.
+
+Example
+```{r}
+data(df_pop_country) #get information for country.
+country_choropleth(df_pop_country, "2012 World Bank Populate Estimates")
+#we get the warning massage: The following regions were missing and are being set to NA: namibia, western sahara, taiwan, antarctica, kosovo
+
+#We find that the country seychelles is missing in the original dataset.
+which(df_pop_country$region=="seychelles")
+#Add it to the dataset, population number is found in Wikipedia.
+seychelles <- c("seychelles",95843)
+df_pop_country_with_seychelles <- rbind(df_pop_country,seychelles)
+country_choropleth(df_pop_country_with_seychelles, "2012 World Bank Populate Estimates")
+# Get warning information : Your data.frame contains the following regions which are not mappable: seychelles
+```
+
+##ggplot2 and tmap
+For ggplot2 and tmap, they both need CRS information of the spatial data in order to draw census. They also share similar syntax. What gglot2 can do is also aviliable in tmap, however in ggplot2, you need to specify the parameter as longitude and latitude. Tmap provides a simple way to do interactive graph(by simply changing the model of tmap, you don't even need to draw a new graph). In ggplot2, you can hardly do it without plotly. ggplot2 works with shp. tmap works with sf data formate (sf is a more organized data format for spatial data).
+When drawing it with facet, tmap is clearly better under view than ggplot2 since it has a bottom layer of the overall map.
+Another difference between ggplot2 and tmap is that you need to have the central CRS information for each state in order to draw the bubble graph.
+
+###Compare the difference between sph and sf.
+```{r}
+ggplot2_states <- map_data("state")
+nrow(ggplot2_states)
+head(ggplot2_states,5)
+tmap_states <- sf::st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
+nrow(tmap_states)
+head(tmap_states,5)
+```
+
+###ggplot2
+ggplot2 provides **geom_polygon** function to draw census graph.
+
+```
+https://socviz.co/maps.html
+https://cran.r-project.org/web/packages/tmap/tmap.pdf
+https://geocompr.robinlovelace.net/adv-map.html
+https://www.jstatsoft.org/article/view/v084i06
+https://cran.r-project.org/web/packages/sf/vignettes/sf1.html
+```
+
+```{r}
+#get data for states
+statedata <- state.x77 %>% as.data.frame() %>% 
+  rownames_to_column("region")
+#change state name to capital so it works with inner_join
+ggplot2_states$region <- str_to_title(ggplot2_states$region)
+ggplot2_statesdata <- inner_join(ggplot2_states,statedata,"region")
+region_data <- data.frame(region=state.name,area = state.region)
+ggplot2_statesdata <- inner_join(ggplot2_statesdata,region_data,"region")
+
+#basic census graph.
+g1 <- ggplot(data = ggplot2_statesdata,
+  mapping = aes(x = long, y = lat, group = group,fill=Income))+
+  scale_fill_gradient(low = "azure", high = "dodgerblue3") +
+  geom_polygon(color="gray90",size=0.1)
+g1
+
+#draw it with facet that based on what part of us the state is in.
+g1+facet_wrap(.~area,nrow = 2)
+
+#draw the bubble plot
+
+#this is what you shouldn't do
+ggplot(data = ggplot2_statesdata)+
+  geom_polygon(aes(x=long, y=lat, group=group), colour = "grey90", fill="white", size=0.1) +
+  geom_point(aes(x=long, y=lat,size=Frost))
+  
+#seems we need the central point spatial information for each state to draw the tmap bubble function.
+#get the idea from https://stackoverflow.com/questions/14773477/putting-interest-rates-on-us-states-map-in-r
+state.location <- data.frame ("region" = state.name,
+                              "Longitude" = state.center$x,
+                              "Latitude" = state.center$y)
+
+ggplot2_statesdata <- inner_join(ggplot2_statesdata,state.location,"region")
+
+
+ggplot(data = ggplot2_statesdata)+
+  geom_polygon(aes(x=long, y=lat, group=group), colour = "grey90", fill="white", size=0.1) +
+  geom_point(aes(x=Longitude, y=Latitude,size=Frost),colour = "lightblue")
+```
+
+###tmap
+```
+https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html
+```
+
+```{r}
+#create the dataset that contains all the information we need.
+colnames(tmap_states)[colnames(tmap_states)=="ID"] <- "region"
+tmap_states$region <- str_to_title(tmap_states$region)
+tmap_states <- inner_join(tmap_states,statedata,"region")
+tmap_states <- inner_join(tmap_states,region_data,"region")
+
+
+#plot model gives us the plot
+tmap_mode("plot")
+t1 <- tm_shape(tmap_states) +
+  tm_polygons("Income")
+t1
+
+#create census with facet
+t2 <- t1+tm_facets(by = "area")
+
+#view mode gives us interactive plot
+
+tmap_mode("view")
+t1
+t2
+
+#Bubble graph
+tm1 <- tm_shape(tmap_states) + tm_polygons("Frost")
+tm2 <- tm_shape(tmap_states) + tm_bubbles(size = "Frost",col = "lightblue")
+
+tmap_arrange(tm1, tm2)
+```
+
+###Additional information for people who want to draw the census graph for China. Since China spatial data is not avilible in the package mentioned above.
+
+```
+https://github.com/Lchiffon/REmap
+https://blog.csdn.net/wzgl__wh/article/details/53108754?from=singlemessage&isappinstalled=0
+```
+
+```{r}
+#there is an additional map package that provide china spatial information
+#however, hard to understand the data.
+library(mapdata)
+maps::map("china")
+china <- map_data("china")
+tail(china,1)
+#china has no province information and nearly 200 region, hard to figure out what it is represent.
+##An alternative would be REmap
+library(REmap)
+#plot it with random number assigned to province.
+data = data.frame(country = mapNames("china"),
+                   value = 5*sample(34)+200)
+out = remapC(data,maptype = "china",color = 'skyblue')
+plot(out)
+```
+
+#Conclusion
+  In summary, we provide packages that can be used to draw census graphs in R.The Choroplethr is really easy and time-saving. Eventhough it sacrifies the ability to add more area/country we may want, we don't need to do much data manipultion and don't need to provide the spatial data. Choroplethr should be considered as a fairly good choice. For ggplot2 and tmap, personally, I would recommand tmap. Eventhough you can do the same thing with ggolot2, it is more complicated and requires more data. Tmap provides a simpler way to generate interactive graph and the graph tends to be more good-looking.
