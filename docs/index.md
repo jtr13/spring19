@@ -46,6 +46,8 @@
 
 [Leaflet vs. Parcoords](xx2295.html)
 
+[Leaflet vs. Tableau](Community_contribution-group25.html)
+
 #### Writing Reports
 
 
