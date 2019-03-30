@@ -28,6 +28,7 @@
 
 [vcd vs. ggplot2](xx2308.html)
 
+[Census Map using Choroplethr, ggplot2 and tmap](zq2167_xc2463_census_map.html)
 
 #### Data Visualization (interactive)
 
