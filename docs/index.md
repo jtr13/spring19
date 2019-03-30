@@ -43,6 +43,8 @@
 
 [Leaflet vs. Parcoords](xx2295.html)
 
+[basic R graphic vs. ggplot2](cc4317.html)
+
 #### Writing Reports
 
 
