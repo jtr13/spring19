@@ -36,6 +36,8 @@
 
 [ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
 
+[ggplotly vs. plot_ly](community18.html)
+
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
