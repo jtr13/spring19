@@ -1,0 +1,179 @@
+---
+title: "Using Base R and Tidyverse for Data Manipulation - A Comparison"
+author: "Ting Cai (tc2945), Xinze Liu (xl2822)"
+date: "2019/3/25"
+output: html_document
+
+---
+
+Some base R functions, plyr, dplyr and tidyr packages are very efficient tool to perform data manipulation like subsetting, sorting and merging of data. Though the sytax, ways and complexity of them to deal with data may be different, we can always get the same result we want. Here, I want to use the dataset "strikes" to compare the commons and differences between them. 
+
+The dataset "strikes" is a data set on 18 countries over 35 years(compiled by Bruce Western, in the Sociology Department at Harvard University). The measured variables are represented as follows:
+
+* country,year:  country and year of data collection
+* strike.volume:  days on strike per 1000 workers
+* unemployment:  unemployment rate
+* inflation:  inflation rate
+* left.parliament:  leftwing share of the goverment
+* centralization:  centralization of unions
+* unemployment:  unemployment rate
+* density:  density of unions
+
+```{r}
+strikes <- read.csv("strikes.csv")
+head(strikes)
+```
+
+If we want to research on *the average unemploymentrate, inflation rates, and strike volume for each year in the strikesdata set*, we can use base R and tidyverse.
+
+## **Using base R**
+
+First, we need to split our data into appropriate chuncks, each of which can be handled by our function. Here, the function split() is often helpful. Recall, **split(df, f = my.factor)** splits a data frame df into several dataframes, defined by constant levels of the factor **my.factor**.
+
+```{r}
+years.split <- split(strikes, strikes$year)
+str(years.split[[1]])
+```
+
+Now, we have several sub datasets of strikes that divided by year. Then, define a function that can calculate the mean of unemployment, inflation rates, and strike colume for each small dataset.
+
+```{r}
+three.mean <- function(df) {
+  return(apply(df[, c("unemployment", "inflation", "strike.volume")], 2, mean))
+}
+```
+
+Finally, apply our function to each chunk of data frame in **years.split**. Here, the function sapply() are helpful.
+
+```{r}
+years.avg.apply <- sapply(years.split, three.mean)
+str(years.avg.apply)
+years.avg.apply[, 1:6]
+```
+
+## **Using tidyverse**
+
+For the same research question, the method that using tidyverse are more concise and straightforward. Two packages"plyr" and "dplyr" included in tidyverse, can both be used to solve data manipulation problem.
+
+### plyr
+
+*"pylr"* provides us with an extremely useful family of apply-like functions. Here we would like to use function ddply(), which can split the input dataframe, apply a function to each piece and then combine all the results back together as a new dataframe. If we want the type of output to be matrix or list, the function daply() and dlply() are helpful. 
+
+The details can be found here:https://www.rdocumentation.org/packages/plyr/versions/1.8.4
+
+```{r}
+library(plyr)
+years.avg.plyr <- ddply(strikes[, c("year", "unemployment", "inflation", "strike.volume")], .(year), 
+      apply, MARGIN = 2, FUN = mean)
+str(years.avg.plyr)
+head(years.avg.plyr)
+```
+
+### dplyr
+
+*"dplyr"* is a grammar of data manipulation, providing a consistent set of verbs to solve the most common data manipulation challenges.
+
+First, we use select() function to select the columns in the dataset strikes that we need to calculate.
+Then, we use group_by() function to splite the dataset strikes into small groups by year.
+Finally, we use summarise_all() function to get a summary statistic for each group of all columns. Since we want to compute the means here, we put mean inside the parathesize of function summarise_all(). The details can be found here:https://www.rdocumentation.org/packages/dplyr/versions/0.7.8
+
+It is worth to mention that the pipes %>% here take each output of previous function and send it directly to the next, which is useful when you need to do many things to the same data set and make each step clear.
+
+```{r}
+library(tidyverse)
+years.avg.dplyr <- strikes %>%
+  select(year, unemployment, inflation, strike.volume) %>%
+  group_by(year) %>%
+  summarise_all(mean)
+str(years.avg.dplyr)
+head(years.avg.dplyr)
+```
+
+## **Comparison of base R and tidyverse for Data Manipulation**
+
+### How do their features differ?
+
+Actually base R and tidyverse can handle the same task and produce the similar result. For base R, you need to do three steps(split, process per piece, and combine) one by one and store all the intermediary results. However, using tidyverse can solve this task and obtain the final result straightforward. 
+
+Another siginificant difference is the structure of the result. For base R, the targeted features are row variables and the different groups are column variables. However, for tidyverse, the targeted features are column variables and the different groups are the values of first column variable.
+
+### Better suited for certain types of tasks respectively
+
+#### Trend chart
+
+We can use base R to plot trend chart of the average of different features over years.
+
+As the ranges of three features ("Unemployment", "Inflation", "strike.volume") are extremely different, we build a plot with two axises. Reference: https://www.r-bloggers.com/r-single-plot-with-two-different-y-axes/
+
+```{r}
+par(mar = c(5,4,2,4))
+max.rate <- max(years.avg.apply[1:2,])
+min.rate <- min(years.avg.apply[1:2,])
+plot(colnames(years.avg.apply), years.avg.apply[1, ], xlab = "Year", ylab = "Rate", 
+     type = "o", col = "#234003", ylim = c(min.rate, max.rate))
+points(colnames(years.avg.apply), years.avg.apply[2, ], type = "o", col = "#a61c00")
+# Second axis for strike.volume
+par(new = T)
+plot(colnames(years.avg.apply), years.avg.apply[3, ], type = "o", col = "#3d85c6", yaxt='n', ann=FALSE)
+axis(side = 4)
+mtext(side = 4, line = 3, 'Days')
+legend("topright", c("Unemployment", "Inflation", "strike.volume"), fill = c("#234003", "#a61c00", "#3d85c6"), cex = .5)
+```
+
+Actually, tidyverse can also draw this trend chart. Since this is a simple task, I prefer to use base R.
+
+#### Cleveland dot plot
+
+*"ggplot2"* package included in tidyverse is really helpful to draw Cleveland dot plot. First, we need to use function tidyr::gather() to tide data, which means convert multiple column features into key-value pairs. Then, we can use ggplot grammer to draw Cleveland dot plot. Recall the different ranges of different features still need to be handled by adding the second axis.
+
+```{r}
+# Tidy data
+years.avg.dplyr$strike.volume <- years.avg.dplyr$strike.volume / 50
+years.avg.dplyr_tidy <- gather(years.avg.dplyr, key = "Features", value = "Avg", -year)
+years.avg.dplyr_tidy$Features <- fct_relevel(years.avg.dplyr_tidy$Features, "strike.volume", after = Inf)
+head(years.avg.dplyr_tidy)
+# Cleveland dot plot with multiple dots
+ggplot(years.avg.dplyr_tidy, 
+       aes(x = Avg, 
+           y = fct_reorder2(as.factor(year), Features, -Avg))) + 
+  geom_point(aes(col = Features)) + 
+  ylab("years") +
+  scale_x_continuous(
+    "Rate", 
+    sec.axis = sec_axis(~ . * 50, name = "Days")) +
+  ggtitle("Trend Chart over Years")
+```
+
+Only using base R is hard to draw Cleveland dot plot.
+
+### What are pros and cons of each?
+
+#### base R
+
+Pros are:
+
+* not depend on other packages;
+* all the steps are clear and intuitive;
+* all the intermediary results can be easily obtained and changed.
+
+Cons are:
+
+* all the intermediary results must be stored;
+* some proper type transforms are needed sometimes;
+* groups are considerd as columnnames.
+
+#### tidyverse
+
+Pros are:
+
+* concise process;
+* consistent format and type;
+* some functions can handle some tasks cannot be accomplished or hard to processed by base R.
+
+Cons are:
+
+* hard to store or change the intermediary results;
+* hard to learn and use for naive users;
+* more storeage memory is needed for packeges.
+
+Between "plyr" and "dplyr", the former can solve most data manipulation tasks with one function, while the latter still need to use several functions step by step. However, "plyr" is harder to learn, and not clear enough to be understood by naive user.

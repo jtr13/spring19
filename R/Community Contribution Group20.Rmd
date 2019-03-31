@@ -1,0 +1,135 @@
+---
+title: "Community Contribution Heatmap"
+author: "Yiyao Hu & Yakun Wang yw3211"
+date: "3/24/2019"
+output: html_document
+---
+## Introduction
+Introduction: Heatmaps are graphical representation of data that utilize color-coded systems. They can show frequency counts or value of third variable using various colors. They give us good visualization of higher dimension data. For instance, 2D histograms or 2D bargraphs. 
+
+R provides several packages/functions to draw Heatmaps:
+
+1.MASS package in Base R
+
+2.plot_ly package
+
+3.ggplot2 package
+
+In this post we will compare these approaches using the dataset from one of our homework.
+
+
+## Data Description
+We used the census data in the U.S. Counties in 2010. In particular, we selected county names, county population, percent of total population over 85, and percent of total population under 5 and rename them: “County”, “Pop”, “Over85”, and “Under5”. In addtion, we grouped the observations according to the population size. The groups are "<=10000", "(10000,50000]", "(50000,90000]", ">90000". The group which each observation belongs to is recorded in the column named "cate".
+
+When ploting the heatmaps, we set the "total population under 5" on x-axis, and "total population over 85" on y axis. The colors show the frequency of points in their respective area. In summary, this type of heatmaps can also be called 2D histogram.  
+
+```{r}
+Continuous<-read.csv("Continuous_Data.csv")
+head(Continuous)
+```
+
+
+##1. Base R (MASS Package)
+```{r}
+library(MASS)
+est.density<-kde2d(Continuous$under5, Continuous$over85, n=500)
+image(est.density, col = rainbow(20))
+contour(est.density, add = T)
+```
+
+Since the data is not counted for us (or the third value is not provided), we cannot simply apply heatmap() function in base R. heatmap() can only be applied when there is a numerical matrix. 
+
+To deal with this type of dataset, we first need to apply 2d kernel density estimation to x and y. This is a nonparametric technique for density estimation. This is done by using kde2d() in MASS package. After we get the estimated density for the dataset, we can use image() to display the heatmap.  
+
+When using this way to generate heatmap, binwidth can be changed using n. In particular, n is the number of grid points in x and y axis. The color choice is limited here, we can only choose functions (heat.colors, topo.colors, rainbow, and etc.) which can create heat-spectrum. 
+
+One drawback of this technique is that we cannot get a side bar (colorkey) which can explain the color and their respective counts. To solve this problem, we can add contour lines, or points so that we can see the density more clearly. 
+
+
+##2. Plotly 
+```{r, warning=FALSE, message=FALSE}
+library(plotly)
+p<-plot_ly(x=Continuous$under5,
+        y=Continuous$over85
+          )
+p %>% add_histogram2d(nbinsx=60, nbinsy=60)
+```
+
+```{r}
+  p %>% add_markers(alpha = 0.2)
+  p %>% add_histogram2dcontour(colorscale ="kdfdkfj")
+```
+
+Plotly can create interactive plots, which provide more information. For instance, in the scatter plot, we can tell the coordinates of each point. In the heatmap, we know the number of points (z) in each rectangular area.
+
+First we apply plot_ly(), It can create a sensible plot based on the information we give. In this case, we provide x and y, so it gives us a scatter plot. Then, in order to create a heatmap, we need to add trace to it. Here, we use add_histogram2d() or add_histogram2dcontour(). 
+
+The attributes "nbinsx" and "nbinsy" help us to adjust the bins. 
+When we tried to change colors using the attribute "colorscale", the colors does look different from the default color. However, it remains the same when I try different color options. In addition, it does not report errors even if I put random stuff. I am assuming this package still need to be developed. 
+
+
+##3. ggplot2
+```{r}
+library(ggplot2)
+gg1<-ggplot(Continuous)+geom_bin2d(aes(x=under5,y=over85))
+gg2<-ggplot(Continuous)+geom_hex(aes(x=under5,y=over85),bins=30)
+gg3<-ggplot(Continuous)+geom_bin2d(aes(x=under5,y=over85),bins=100)+scale_fill_continuous(high='yellow',low='purple')
+library(dplyr)
+gg4<-Continuous%>% 
+  count(under5,over85) %>%  
+  ggplot(mapping = aes(x = under5, y = over85)) +
+    geom_tile(mapping = aes(fill = n))
+library(gridExtra)
+grid.arrange(gg1,gg2,gg3,gg4, nrow = 2)
+```
+
+ggplot2 package has strong function of ploting charts.We have many options to plot heatmaps using ggplot2 package. 
+
+Using ggplot2 we can change the shape of cells of heatmaps. If the data is not counted for us (or the third value is not provided), we need to use geom_bin2d() to plot a heatmap and the shape is rectangle. In this case, we also can use stat_bin2d() or stat_bin_2d() to replace geom_bin2(). With uncounted data, we can use geom_hex() to plot a heatmap with the hexagon shape and stat_binhex() can be used to replace geom_hex() in this case. These functions in ggplot2 can automatically compute the count of our data. Another approach is to compute the conut with dplyr. With counted data we can use geom_tile() to plot heatmaps.
+
+Comparing the shape of heatmap ploted by geom_bin2d() and geom_tile(), we can see that the shape of the heatmap using geom_bin2d() tends to be longer and the shape of the heatmap using geom_tile() tends to be higher, so that is the reason why the chart gg3 (left bottom) is slightly different from gg4 (right bottom).
+
+We can use gglot2 to change the number of bins of heatmaps. The defualt of bins is 30. With different number of bins, heatmaps may show different features.
+
+We also can change the color of heatmaps, here we can use scale_fill_continuous() to set a continuous color for heatmaps.
+
+```{r}
+gg5<-ggplot(Continuous)+geom_hex(aes(x=under5,y=over85))+ facet_wrap( ~ cate, ncol=2)
+gg6<-Continuous %>% 
+  count(under5, over85,cate) %>%  
+  ggplot(mapping = aes(x= under5, y = over85)) +  
+    geom_tile(mapping = aes(fill = n)) +facet_wrap( ~ cate, ncol=2)
+gg5
+gg6
+```
+
+Sometimes, we want to see more information by dividing our data with another variable. Using ggplot2, we can easily achieve this goal by making facets. Here we give two way to make facets for both counted data and uncounted data using ggplot2. 
+
+```{r}
+ggplot(Continuous, aes(under5, over85))+ stat_density2d(aes(fill = ..level..), geom="polygon")
+ggplot(Continuous, aes(under5, over85))+ stat_density2d(aes(fill = ..level..), geom="polygon")+ scale_fill_continuous(high='yellow',low='purple') + geom_point(alpha=0.5,size=0.2) +
+geom_density2d(bins=10, col="grey",size=0.3,linetype=2) 
+```
+
+Using stat_density2d() we can plot a chart similar to heatmaps. Actually, this chart is generated by the contour of the data, so it can help us to show some information about the density of the data. However, from charts we ploted, we can observe that this kind of charts will obmit the information of the edge of data because it only remains the part where contour exists. 
+
+We also can change the color and add other kinds of charts on this plot by using ggplot2. Here we add the dotplot and contour on this plot.
+
+```{r}
+ggplot(data =Continuous) + geom_count(mapping = aes(x = under5, y = over85))
+ggplot(data =Continuous,aes(x = under5, y = over85)) + geom_count(alpha=0.7,color="blue",shape=7,stroke=0.5)
+```
+
+Another chart similar to heatmap ploting by ggplot2 can be produced by geom_count(). In this chart the frequency information is not reflected by the color but reflected by the size. We can change the parameter of geom_count() to change its shape, color, transparency, etc..
+
+## Conclusion
+In summary, all packages are good for generating heatmap (in our case, 2D histogram). 
+Base R needs an additional density estimation step. Plotly and ggplot 2 can handle uncounted data directly. 
+
+One drawback of Base R is that it does not have a color-key. Since the we used the image() function to generate heatmaps, that function is not particularly designed for heatmaps. However, we can solve this problem by adding contours or points. Thus, Base R is not a bad choice for heatmaps.
+
+Heatmaps generated by plot_ly can give us more detailed information than the other two packages. One drawback of plot_ly is that the "colorscale" attributes does not work well when changing colors. We are assuming that it is not well-developed.
+
+Heatmaps generated by ggplot2 are more flexible in changes. It is easier to show more information by adding more kinds of plots. Using ggplot2 also can help us to generate other kinds of plot which have the similar function with heatmaps. In this case, we can have more choices to display the information of the data showing by heatmaps by using ggplot2. But ggplot2 cannot help us to display all data like plot_ly does.
+
+
