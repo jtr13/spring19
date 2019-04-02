@@ -13,4 +13,6 @@ On your branch, do the following:
 
 3. In the `index.md` file in the `docs` folder, add a link to *your* `.html` file in the appropriate section.  Feel free to create new sections as needed. Keep the entries alphabetical within each section.
 
+**Please do not include any additional system files in your pull request such `.DS_store`, `.Rproj` files, etc.** (You can put these files in `.gitignore` so you don't accidentally commit them.)
+
 Post any questions you have on Piazza!
