@@ -1,0 +1,226 @@
+---
+title: "Community Contribution - Function Comparison for Mosaic Plot"
+author: "Xiaowo Sun"
+date: Mar 26, 2019
+output: html_document
+---
+
+# `vcd::mosaic` and `ggmosaic::geom_mosaic`
+```{r results='hide', message=FALSE, warning=FALSE}
+library(vcd)
+library(ggmosaic)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(grid)
+require(gridExtra)
+```
+
+
+## Introduction
+
+Are you looking for a graphical method for presenting multivariate categorical data? Do you want to explore some part-to-part or part-to-whole relationships in a visualization way? Do you happen to do this with space limitation? Then mosaic plots can be a good choice for you.
+
+In R, there are several packages and functions that can be used to create mosaic plots. In this article, I will cover `vcd::mosaic` and `ggmosaic::geom_mosaic`, which are two of the most commonly used functions for this task.
+
+Let's take a very first look on the mosaic plots created by these two functions using the classic dataset of `Titanic`. For now, we would like to have an idea of the proportions of the survivals on the Titanic. The styles are a bit different but these two functions finish the job well. We can clearly see the proportions of people who survived or not.
+```{r}
+# Titanic dataset
+data(Titanic)
+titanic <- as.data.frame(Titanic)
+titanic$Survived <- factor(titanic$Survived, levels=c("Yes", "No"))
+head(titanic)
+color <- c("#f48f8b","#52c7cb")
+```
+
+#### Using `vcd::mosaic`
+```{r}
+contingency_table <- xtabs(Freq ~ Survived, titanic)
+vcd::mosaic(x=contingency_table,
+            main="Survivals on the Titanic")
+```
+
+#### Using `ggmosaic::geom_mosaic`
+```{r}
+ggplot(data=titanic) + 
+  geom_mosaic(aes(weight=Freq, x=product(Survived), fill=Survived)) + 
+  ggtitle("Survivals on the Titanic")
+```
+
+
+## Example Using `vcd::mosaic`
+
+`vcd` is short for "Visualizing Categorical Data", which is a package for "creation and manipulation of frequency and contingency tables from categorical variables, along with tests of independence, measures of association, and methods for graphically displaying results". 
+
+#### Two Variables
+
+When you are reading the documentation of `vcd::mosaic`, you might be noticing that there are two kinds of data formats for this function to take in. The default version would be a contingency table in array form, the others would be a `formula` specifying the variables used to create a contingency table from `data`. Both versions can produce same results if you handle them correctly. Be careful for this part, as sometimes it would affect the functionalities of other arguments.
+```{r}
+# Default version:
+newct <- xtabs(Freq ~ Age + Survived, titanic)
+vcd::mosaic(x=newct, 
+            gp = gpar(fill = color), main="Survivals on the Titanic")
+
+# 'formula' version:
+vcd::mosaic(formula = ~ Age + Survived, data = titanic,
+            gp = gpar(fill = color), main = "Survivals on the Titanic")
+vcd::mosaic(formula = Survived~Age, data = titanic,
+            gp = gpar(fill = color), main = "Survivals on the Titanic")
+```
+
+We can also see that `vcd::mosaic` enables us to easily compare the observed data with the expected one by setting `type = "expected"`. 
+```{r}
+newct <- xtabs(Freq ~ Age + Survived, titanic)
+vcd::mosaic(x=newct, 
+            gp = gpar(fill = color), main="Survivals on the Titanic (Observed)")
+vcd::mosaic(x=newct, type = "expected",   
+            gp = gpar(fill = color), main="Survivals on the Titanic (Expected)")
+```
+
+If you are going to visualize the relationships between `Survived` and other variables, it would be a good practice to split `Survived` horizontally and fill the color based on the values of `Survived`.
+```{r}
+vcd::mosaic(formula = Survived~Age, data = titanic,
+            direction = c("v", "h"),
+            gp = gpar(fill = color), main = "Survivals on the Titanic")
+```
+
+#### Three Variables
+When there are more variables, you might want to further specify the directions for splitting in order to have a clear plot that can better present the relationships between variables. In our case, the split starts from `Sex` to `Survived` in the order of direction.
+```{r}
+newct <- xtabs(Freq ~ Sex + Age + Survived, titanic)
+vcd::mosaic(x = newct,
+            direction = c("v", "v", "h"),
+            gp = gpar(fill = color), main = "Survivals on the Titanic")
+```
+
+There are statistcal functions embedded for `vcd::mosaic` to perform statistical test, such as tests of independence, which is helpful based on the nature of mosaic plot.
+```{r}
+vcd::mosaic(formula = ~Sex + Age + Survived, data = titanic, shade = TRUE,
+            direction = c("v", "v", "h"),
+            labeling=labeling_residuals)
+
+vcd::mosaic(formula = ~Sex + Age + Survived, data = titanic, shade = TRUE,
+            expected = ~Sex:Survived + Age,
+            direction = c("v", "v", "h"),
+            gp = shading_Friendly,
+            labeling=labeling_residuals)
+```
+
+#### Four Variables
+With four or more variables, we could further look into how to perform split to have a clear and nice plot so that some variables won't be squeezed out.
+
+If we continuing set the `Survived` as the only variable split horizontally, the plot will look like this. 
+```{r}
+vcd::mosaic(formula = Survived ~ Sex + Class + Age, data = titanic,
+            direction = c("v", "v", "v", "h"),
+            gp = gpar(fill = color),
+            rot_labels=c(90,0,0,0),
+            main = "Survivals on the Titanic")
+```
+
+Let's try another way.
+
+If you do not specify the direction for splitting, it will follow a default clockwise order of direction.
+```{r}
+vcd::mosaic(~ Sex + Class + Age + Survived, titanic,
+            #direction = c("h", "v", "h", "v"),
+            gp = gpar(fill = color),
+            main = "Survivals on the Titanic")
+
+vcd::mosaic(Survived ~ Sex + Class + Age, titanic,
+            #direction = c("h", "v", "h", "v"),
+            gp = gpar(fill = color),
+            main = "Survivals on the Titanic")
+```
+
+```{r}
+vcd::mosaic(Survived ~ Sex + Class + Age, titanic,
+            direction = c("v", "h", "h", "v"),
+            gp = gpar(fill = color),
+            rot_labels=c(0,0,0,0),
+            main = "Survivals on the Titanic")
+```
+
+
+
+## Example Using `ggmosaic::geom_mosaic`
+
+`ggmosaic` is used for creating mosaic plots in the 'ggplot2' framework, which basically has the inherent grammer of `ggplot2`.
+
+#### Two Variables
+Good practice: use the 'dependent' variable (or most important variable) as fill variable.
+```{r}
+ggplot(data=titanic) +
+geom_mosaic(aes(weight=Freq, x=product(Age), fill=Survived)) +
+  ggtitle("Survivals on the Titanic") + ylab("Survived") + xlab("Age")
+```
+
+#### Three Variables
+Similar to `vcd::mosaic`, we could set the direction for splitting use `divider` here.
+```{r}
+ggplot(data=titanic) +
+  geom_mosaic(aes(weight=Freq, x=product(Sex, Age), fill=Survived),
+              divider=c("vspine","hspine","hspine")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+`geom_mosaic` has the condition option for us.
+```{r}
+#condition on child
+ggplot(data=titanic) +
+  geom_mosaic(aes(weight=Freq, x=product(Sex), conds=product(Age), fill=Survived),
+              divider=c("vspine","hspine","hspine")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+An alternative way for conditioning is to use facet.
+```{r}
+ggplot(data=titanic) +
+  geom_mosaic(aes(weight=Freq, x=product(Sex), fill=Survived),
+              divider=c("vspine","hspine")) +
+  facet_grid(Age~.) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+#### Four Variables
+```{r}
+ggplot(data=titanic) +
+  geom_mosaic(aes(weight=Freq, x=product(Sex, Age, Class), fill=Survived),
+              divider=c("vspine","hspine","hspine","hspine")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+ggplot(data=titanic) +
+  geom_mosaic(aes(weight=Freq, x=product(Sex, Age), fill=Survived),
+              divider=c("vspine","hspine","hspine")) +
+  facet_grid(Class~.) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## Comparison of `vcd::mosaic` and `ggmosaic::geom_mosaic`
+
+Generally, `vcd::mosaic` and `ggmosaic::geom_mosaic` do the same things but have several different features, so each has its own advantages for certain types of tasks. `vcd::mosaic` is better for statistical exploration, while `ggmosaic::geom_mosaic` can use the advantages of `ggplot2`, such as using `facet` for conditioning. The documentations are clear for this two packages and functions and providing good example codes, which could be a good start point for us to dig into these two functions.
+
+Some tips for using `vcd::mosaic`:
+
+* Try adding `vcd::`, if you encounter an error in some cases.
+* Be careful about the data format, as deep down inside what `vcd::mosaic` needs is a contengency table. The formulas used to get workable data formats can have several variants based on your goals, whether in the default version (using `xtabs` in this article) or the 'formula' version. Some variants may not work well when you set some certain arguments in the function.
+* If set `shade = TRUE`, do not use `gp = gpar(fill = color)`, otherwise you might have trouble getting the Pearson residuals.
+* You could set `spacing` to control the margin in the plot.
+* I failed to figure out how to use `condvars` in the function.
+
+Some tips for using `ggmosaic::geom_mosaic`:
+
+* `ggmosaic::geom_mosaic` expects a dataframe.
+* If there is a separate variable containing values of frequency, do not forget to set `weight` in `aes()` (`weight=Freq` in this article).
+* Use `product()` to plot multiple variables.
+* You could set `offset` to control the margin in the plot.
+
+Reference:
+
+* https://cran.r-project.org/web/packages/vcd/vcd.pdf
+* https://cran.r-project.org/web/packages/vcdExtra/vignettes/vcd-tutorial.pdf
+* https://cran.r-project.org/web/packages/ggmosaic/ggmosaic.pdf
+

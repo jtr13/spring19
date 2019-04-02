@@ -1,0 +1,179 @@
+---
+title: "A Comparison of *plot_ly* and *ggplotly* <br/>for Interactive Graphs in R"
+author: "Shuang Lu (sl4397) & Hongye Jiang(hj2493)"
+date: "Mar 18, 2019"
+output: html_document
+---
+
+```{r setip, include = F}
+library(tidyverse)
+library(plotly)
+```
+
+## Introduction
+
+Interactive graphs can present data in a more informatice way than regular plots. In R, both functions *plot_ly* and *ggplotly* can produce such interactive graphs. We will compare these two functions using the state.x77, state. region, state.abb datasets.
+
+```{r}
+state <- data.frame(state.x77, state.region, state.abb) %>% 
+  rename(Region = state.region) %>% 
+  rownames_to_column("State")
+head(state)
+```
+
+## Comparison
+
+### Basic
+
+We will compare these two functions basics by ploting a scatter plot to investigate the relationship between two variables: Income and Murder Rate, and then fit a linear regression line on it.
+
+The gramma of *plot_ly* is similar to that of *ggplot2*. By specifying *text* section, you can customize the mouse over hover text. If *text* is not specified, the default hover text is just the x and y coordinates of that data point. In addtion, you can group the data points by *color* and *size* just as in *ggplot2*. To add a layer in the graph, such as fitting a linear regression line, we use *add_trace*.
+
+```{r}
+fv <- state %>% lm(Murder~Income, .) %>% fitted.values()
+
+p1 <- plot_ly(data = state, x = ~Income, y = ~Murder,
+        type = "scatter", mode = "markers",
+        text = ~paste(State, "<br>Income: ", Income, '<br>Murder Rate:', Murder)) %>% 
+  add_trace(x = ~Income, y = fv, mode = "lines") %>%
+  layout(yaxis = list(title = "Murder Rate"), showlegend = F)
+p1 %>% layout(title = "Murder Rate VS Income")
+```
+
+To use *ggplotly* function, plot a regular *ggplot2* graphs *g* and then apply *ggplotly* function on the plot *g*. The default hover text can be messy and can be rearranged easily through *tooltip*. In *tooltip*, you can sepcify which variables to be included and the order of their appearances. The rearranged hover text seems clearer than *plotly*'s.
+
+```{r, warning=FALSE, message=FALSE}
+g1 <- ggplot(data = state, aes(x = Income, y = Murder))+
+  geom_point(aes(text = State))+
+  geom_smooth(method = lm, se = FALSE)+
+  labs(y = "Murder Rate")
+  
+ggplotly(g1 + labs(title = "Murder Rate VS Income"), 
+         tooltip = c("text", "Income", "Murder"))
+```
+
+
+
+### Subplot
+
+To produce subplots by four different regions using *plotly*, we can use the *subplot* function which takes in a list of plots. Positions of subplots can be arrange through parameters *nrows*, *shareX* and *shareY*.
+
+```{r, warning=FALSE, message=FALSE}
+state %>%
+  split(.$Region) %>%
+  lapply(function(d) plot_ly(d, x = ~Income, y = ~Murder, color = ~Region)) %>%
+  lapply(function(l) layout(l, xaxis = list(range = c(3000, 5500)), 
+                            yaxis = list(range = c(1, 12)),
+                            title = "Subplot: Murder Rate VS Income")) %>% 
+  subplot(nrows = 2, shareX = TRUE, shareY = TRUE) 
+```
+
+To do it in *ggplotly*, useng *facet_wrap* in *ggplot2* to create subplots and then apply *ggplotly* on top
+of that. The outcoming graph automatically has the same x axis and y axis ranges and titles for each subplot, which make it look more organized and easier to read.
+
+```{r, warning = FALSE}
+g2 <- ggplot(data = state, aes(x = Income, y = Murder))+
+  geom_point(aes(color = Region,text = State))+
+  facet_wrap(~Region, nrow = 2)+
+  labs(title = "Subplot: Murder Rate VS Income")
+ggplotly(g2, tooltip = c("text", "Income", "Murder"))
+```
+
+
+### Mixed Subplots
+
+To create mixed subplots in *plotly*, create different *plotly* graphs and then use *subplot* function. The only problem is that we lose axis label, unless we set a location to add some words. 
+
+```{r}
+p3 <- plot_ly(state, x = ~reorder(Region, -Income, median), y = ~Income, 
+              text = ~paste(State, "<br>Income: ", Income)) %>%
+  add_boxplot(type = "box", name = "Whiskers and Outliers", boxpoints = 'outliers', showlegend = FALSE)
+
+subplot(p3, p1) %>% layout(showlegend = FALSE,
+                           annotations = list(
+  list(x = 0.1 , y = 1.05, text = "1974 US Income Per Capita", showarrow = F, xref='paper', yref='paper'),
+  list(x = 0.9 , y = 1.05, text = "Murder Rate VS Income", showarrow = F, xref='paper', yref='paper')))
+```
+
+Or we can plot regular *ggplot2* graphs *p1* and *p2* and then use *subplot(ggplotly(p1), ggplotly(p2))*
+In addition, there's difference between *ggplotly* and *ggplotly* in the boxplot graph. In *ggplotly*, the box seems to cover the individual values, while in *ggplotly*, we may know the value of each points while moving the mouse onto the box. (The points is invisible because I changed the transparency.)
+
+```{r, warning=FALSE}
+g3 <- ggplot(state, aes(x = reorder(Region, -Income, median), y = Income))+
+  geom_point(aes(text = State), alpha = 0, size = 2)+
+  geom_boxplot()
+  
+
+subplot(ggplotly(g3, tooltip = c("text", "Income")), ggplotly(g1)) %>% 
+  layout(showlegend = FALSE,
+         annotations = list(
+  list(x = 0.1 , y = 1.05, text = "1974 US Income Per Capita", showarrow = F, xref='paper', yref='paper'),
+  list(x = 0.9 , y = 1.05, text = "Murder Rate VS Income", showarrow = F, xref='paper', yref='paper')))
+```
+
+### Multiple axes
+
+We may see more information from a graph with multiple axes. We will compare Murder Rate with Illiteracy and Life Expection at the same time. Here, I first sort the murder rate from low to high, then the value of Illiteracy rate corresponding to left Y-axis, while life expection corresponding to the right one, in order to see the trend of these two variables as murder rate gets higher. You may click *Campare data on hover* on the interface to see both two values of one specific state at the same time. 
+
+*Plotly* provides us an option to draw multiple axes on one graph. What we need to do is to add *yaxis = 'y2'* on the second trace, and *yaxis2 = list(overlaying = "y", side = "right")* in layout. Both of two y-axes display clearly. Everything else performs good as well. 
+```{r}
+p4 <- plot_ly() %>%
+  add_lines(data = state, x = ~reorder(State,Murder), y = ~Illiteracy, name = "Illiteracy Rate") %>%
+  add_lines(data = state, x = ~reorder(State,Murder), y = ~Life.Exp, name = "Life Expection", 
+            yaxis = 'y2') %>%
+  layout(title = "Correlation between Murder Rate and Illiteracy VS Life Expection", 
+         xaxis = list(title="States (Sort by Murder Rate from low to high)"),
+         yaxis = list(tickfont= list(color = '#1f77b4', size=11), color='#1f77b4', range=c(0,4),
+                      title="Illiteracy Rate"),
+         yaxis2 = list(overlaying = "y", side = "right",
+                       tickfont = list(color = '#ff7f0e', size=11), color='#ff7f0e', range=c(67.8,73.8),
+                       title = "Life Expection"),
+         legend = list(x = 1.05, y = 0.9))
+p4
+```
+
+Though we are able to draw a graph with multiple axes from *ggplot2* from version 2.2.0, using *ggplotly* to create a inference based on this graph will mess up. The reason is that, in *ggplot2*, adding one more axis is actually adding numeric identifiers in that specified area; it's not a new unit of measurement. In this example, what we are doing is to linearly transform the value of life expection into the range of Illiteracy Rate. So both variables may share the same unit of measurement of default y-axis. Then we add the real value of life expection to the right y-axis. This principle also works on the second x-axis. 
+
+The following inference seems to work properly. However, there are a few drawbacks. While we drag the right y-axis, the plot of life expection doesn't move. Instead, its movement follows the left y-axis. It's not surprising because we know the value of life expection is using the first unit of measurement. Also, when we click *Toggle Spike Lines*, the Indicate Lines face toward left and down because of the same reason. 
+
+In addition, the second axis won't show when simply adding *ggplotly* to a *ggplot* function. I guess it's the limitation of *ggplotly*. I used part of the code from the previous one to solve this problem. 
+```{r, warning=FALSE}
+g4 <- ggplot(state, aes(x = reorder(State, Murder), label = Murder, label1 = Illiteracy, label2 = Life.Exp))+ 
+  geom_line(aes(y = Illiteracy, colour = "Illiteracy Rate", 
+                text = paste(State, '<br>Murder Rate:', Murder, '<br>Illiteracy:', Illiteracy),
+                group=1))+
+  geom_line(aes(y = (Life.Exp-67.8)/1.5, colour = "Life Expection",
+                text = paste(State, '<br>Murder Rate:', Murder, '<br>Life.Exp:', Life.Exp), 
+                group=1))+ 
+  scale_y_continuous(sec.axis = sec_axis(~.*1.5+67.8, name = "Life Expection"))+ 
+  labs(title = "Correlation between Murder Rate and Illiteracy VS Life Expection",
+       y = "Illiteracy Rate",
+       x = "States (Sort by Murder Rate from low to high)",
+       colour = "Comparison")+
+  theme(axis.text.x = element_text(angle = 270, hjust = 1),
+        axis.text.y = element_text(colour = "#F8766D"),
+        axis.title.y = element_text(colour = "#F8766D"))
+
+ggplotly(g4,tooltip = 'text') %>%
+  add_lines(data=state, x=~reorder(State, Murder), y=~Life.Exp, colors=NULL, yaxis="y2", 
+             inherit=FALSE, showlegend = FALSE) %>%
+  layout(yaxis2 = list(overlaying = "y", side = "right",
+                       tickfont = list(color = '#00BFC4', size=11), color = '#00BFC4',
+                       title = "Life Expection"),
+         legend = list(x = 1.05, y = 0.95))
+```
+
+
+## Conclusion
+
+Both functions *plot_ly* and *ggplotly* produce nice interactive graphs. For those who are familiar with *ggplot2*, *ggplotly* seems to be the better choice since it allows building on a regular *ggplot* graph. However, function *plot_ly* also has consistent gramma and is easy to learn. Also, *plot_ly* has more comprehensive functions, and may solve the problem which *ggplotly* can't, for example drawing multiple axes. For the aesthetic part of outcoming graphs, We found *ggplotly* produces more predictable and organized graphs. *plot_ly* can surely produce the same results but just with more codes to customize the plot feasures.
+
+
+
+## Reference
+
+https://plot.ly/r/<br/>
+https://www.rdocumentation.org/packages/plotly/versions/4.8.0/topics/subplot<br/>
+https://stackoverflow.com/questions/38593153/plotly-regression-line-r
+
+

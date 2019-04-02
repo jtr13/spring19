@@ -1,0 +1,252 @@
+---
+output: html_document
+runtime: shiny
+---
+#Tableau and Leaflet-A Comparison in Geospatial Data Interactive Visualization
+
+## Introduction
+
+Tableau and R are usefull to visualize geospatial data.
+R provides several packages/functions to visulize geospatial data:
+
+* ggplot2
+* tmap
+* plotly
+* tmap
+* leaflet + Shiny
+
+In this post I will compare leaflet and Tableau using two projects I did.
+
+## Leaflet
+
+Usually when I try build interative geospatial visulization, I will combine both Shiny and leaflet. 
+
+>What is Leaflet? 
+
+Leaflet is a R package that allows you to build interative map without strong knowledge in javascript and CSS. 
+
+The best way to present geospatial data is using both shiny and leaflet. Here is the project I did using leaflet and shiny: 
+https://mingzhong.shinyapps.io/hospital_intelligence/
+
+![Shiny App Example](/Users/zhongming/Desktop/assignment/data\ visulization/community/shinyapp.jpeg)
+
+Pretty cool, right? Let's start with several simple examples and get the gist of leaflet.
+
+>Installation
+
+```{r}
+#install.packages("leaflet")
+# to install the development version from Github, run
+# devtools::install_github("rstudio/leaflet")
+```
+
+>Basic Example
+
+```{r}
+library(leaflet)
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers(lng=174.768, lat=-36.852, popup="The birthplace of R")# add a marker in map
+m  # Print the map
+```
+You create a Leaflet map with these basic steps:
+
+1.Create a map widget by calling leaflet().
+
+2.Add layers (i.e., features) to the map by using layer functions (e.g. addTiles, addMarkers,  addPolygons) to modify the map widget.
+
+3.Repeat step 2 as desired.
+
+4.Print the map widget to display it.
+
+>Read in Geospatial Data
+
+Both leaflet() and the map layer functions have an optional data parameter that is designed to receive spatial data in one of several forms:
+
+*From base R:
++lng/lat matrix
++data frame with lng/lat columns
+*From the sp package:
++SpatialPoints[DataFrame]
++Line/Lines
++SpatialLines[DataFrame]
++Polygon/Polygons
++SpatialPolygons[DataFrame]
+*From the maps package:
++the data frame from returned from map()
+
+Here is an example receiving spatial data from library(maps)
+```{r}
+library(maps)
+mapStates = map("state", fill = TRUE, plot = FALSE)
+leaflet(data = mapStates) %>% addTiles() %>%
+  addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE)
+```
+
+>Change Maps
+
+You can even select the customized map style. There are different kinds of style because of the open source characteristic of Leaflet.
+
+```{r}
+m <- leaflet() %>% setView(lng = -71.0589, lat = 42.3601, zoom = 12)
+m %>% addProviderTiles(providers$Stamen.Toner)
+```
+
+>Shiny Integration
+
+Finally, we want to inegrate Shiny with Leaflet. By building UI and SERVER, we can actually put leaflet map inside the R shiny app.
+```{r}
+library(shiny)
+library(leaflet)
+
+r_colors <- rgb(t(col2rgb(colors()) / 255))
+names(r_colors) <- colors()
+
+shinyApp(
+  ui <- fluidPage(
+  leafletOutput("mymap"),
+  p(),
+  actionButton("recalc", "New points")
+  ),
+
+  server <- function(input, output, session) {
+
+    points <- eventReactive(input$recalc, {
+    cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
+    }, ignoreNULL = FALSE)
+
+    output$mymap <- renderLeaflet({
+    leaflet() %>%
+        addProviderTiles(providers$Stamen.TonerLite,
+          options = providerTileOptions(noWrap = TRUE)
+        ) %>%
+        addMarkers(data = points())
+    })
+},options = list(height = 500)
+  )
+
+```
+
+![Shiny App Screenshot](/Users/zhongming/Desktop/assignment/data\ visulization/community/shinyapp2.png)
+
+We can even go further and add in some button to interact with map. Besides, we can even combine other kinds of graphs to make our data presentation even better !
+
+![Shiny App Screenshot](/Users/zhongming/Desktop/assignment/data\ visulization/community/shinyapp3.jpeg)
+
+
+#Tableau
+
+>What is Tableau
+
+Tableau is a powerful softare that is intuitive and helps visualize complex datasets with ease without writing any code. If you wish to analyze your data geographically, Tableau is a clear choice since it is easy to use and can clearly highlight trends or patterns in your data
+
+>Installation
+
+Tableau can be used online or a desktop version can be downloaded and used within the trial period.
+
+>Basic Example
+
+In this example we used the city level data from https://simplemaps.com/data/us-cities 
+This dataset consists of all US cities, their population, their coordinates and a few other fields.
+
+For building a basic map, one needs to add longitudes as columns and latitudes as rows from Measures.
+
+Once a basic map is built we can start visualizing patterns by adding Marks. The map shows below has the following Marks:
+
+- Detail: State Name
+
+- Size: Population
+
+![Tableau Example 1](/Users/zhongming/Desktop/assignment/data\ visulization/community/tableau_example_1_basic.png)
+
+___
+
+We can also color states by population by adding the population Measure to Marks, as shown below - 
+
+![Tableau Example 2](/Users/zhongming/Desktop/assignment/data\ visulization/community/tableau_example_2_basic.png)
+
+___
+
+> Proportional symbol maps
+
+If one wants to visualize quantitative data proportional symbol maps are a good choice. 
+We use the Earthquake dataset included in Create Proportional Symbol Maps in Tableau Example Workbook on Tableau Public. The steps for building a proportional symbols map are as follows:
+
+- Columns: Longitude, Rows: Latitude
+
+Add following Marks:
+- Detail: ID (from Dimensions), Size: Magnitude^10 (from Measures).
+
+This gives the following basic proportional symbol map. The larger data points represent earthquakes with larger magnitudes, and the smaller data points represent earthquakes with smaller magnitudes.
+
+![Tableau Example 3](/Users/zhongming/Desktop/assignment/data\ visulization/community/Proportional_symbol_maps.png)
+
+
+___
+
+
+You can play around with Marks to add Color (it is also possible to change color in Edit Colors dialog box). The following plot was generated from experimenting with the workbook on Tableau Public -  https://onlinehelp.tableau.com/current/pro/desktop/en-us/maps_howto_symbol.htm 
+
+It shows dark orange data points which represent earthquakes with higher magnitudes, while the dark blue data points represent earthquakes with lower magnitudes.
+
+
+![Tableau Example 4](/Users/zhongming/Desktop/assignment/data\ visulization/community/Proportional_symbol_maps_2.png)
+
+
+___
+
+> Heatmaps
+
+Another way we can visualize the city dataset is by using heatmaps to show concentrations of cities in the US. This can be done easily by changing the Marks setting from Automatic to Density which will generate a heatmap. The following plot shows the heatmap of cities in the US. The darker portions represent a higher density of cities and vice versa for lighter portions.
+
+![Tableau Example 5](/Users/zhongming/Desktop/assignment/data\ visulization/community/cities.png)
+
+
+___
+
+
+Tableau can be used to build Flow Maps, Spider Maps, Point distribution maps and many other types of visualizations. The type of map used depends on the dataset.
+
+Although Tableau can be used without any coding experience, if one wants to integrate Python or R with Tableau, they have the option to do so. Instructions and examples on how to do so can be found on the following links:
+
+- https://www.tableau.com/about/blog/2017/1/building-advanced-analytics-applications-tabpy-64916?__src=override&__widget=blog-widget&li_source=LI&li_medium=blog-widget
+
+- https://community.tableau.com/thread/236068
+
+___
+
+
+##Comparision of Leaflet and Tableau
+
+>Tableau 
+
+All in all, leaflet and Tableau are both great tool to visualize geospatial. We would like to choose different tools based on the condition. For simplicity and convenience, Tableau is for sure the best visualization tool. You can easily visualize data without any code. Anyone can learn Tableau within a short time. 
+
+>Leaflet
+
+Although Tableau is easy to use and learn, leaflet is more preferable when we need to costomize your data presentation. Because of Shiny, we are able to combine Leaflet with other functions in R. if we would like to build a demo data visulization app using R, leaflet will be our top choice. 
+
+##Summary
+Both Tableau and Leaflet+Shiny can be shared using a link. That helps a lot when you try to share your work.
+
+
+
+***
+References
+
+https://rstudio.github.io/leaflet/shiny.html
+
+https://simplemaps.com/data/us-cities
+
+https://onlinehelp.tableau.com/current/pro/desktop/en-us/maps_howto_symbol.htm
+
+
+
+
+
+
+
+
+
+
+
