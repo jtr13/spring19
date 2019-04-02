@@ -44,7 +44,10 @@
 
 [ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
 
+[ggplotly() vs. plot_ly() (subplots)](community_contribution_group17.html)
+
 [MASS vs. plotly vs. ggplot2 (heatmaps)](Community_Contribution%20Group20.html)
+
 
 [plotly vs. highcharter](kz2324_yz3383.html)
 
@@ -57,4 +60,4 @@
 
 #### Writing Reports
 
-
+(add a line)
