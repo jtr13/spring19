@@ -53,6 +53,11 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+
+[Plotting Scatterplot matrices in R](Community Contribution Group#16.html)
+
+#### Writing Reports
+
 [Leaflet vs. Parcoords](xx2295.html)
 
 [Leaflet vs. Tableau](Community_contribution-group25.html)
@@ -60,4 +65,3 @@
 
 #### Writing Reports
 
-(add a line)
