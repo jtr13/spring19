@@ -1,0 +1,164 @@
+---
+title: "community contribution"
+author: 'Chen Chen UNI: cc4317'
+date: "March 26, 2019"
+output: html_document
+---
+
+# Basic R graph vs. ggplot2
+
+
+
+
+## 1 Introductioin
+  basic R graph and ggplot2 are two widely used method for producing figures. The two system are established on different ideas:
+  
+basic R graphics is like most sicientific plotting system. The idea is straightforward. The users specify the variables in a certain type of plot, adjust some aesthetic features and control axises, legend, or title. It is quite an intuitive way of thinking. In paticular in R, those things have to be done within one coding sentence and cannot be modified afterwards.
+
+ggplot2 is based on graphical grammer. The graphics are regarded as layers on layers. For exaple, you can announce what the data frame is and what the x,y variables are in the first layer. In the second layer, you can choose whether to use a scattering plot or a curve. Then you can adjust the axis and the theme. The users can adjust many elements that have been specified by adding more layers. More examples are given in the following section.
+
+  Finaly I compare the two plotting system. I talk about how they address the same task in different ways, what the pros and cons are, and what the appropriate situations are to use them respectively. 
+  
+  
+## 2 Basic R graphics
+
+  Most basic R ploting sentences look like in this way:
+  to do(x=?, y=?, how about the axis?, what are the aesthetic features, like color?)
+  for example: 
+  x= 1,2,3,4,5
+  y= 1,2,3,4,5
+  I want the data points to be red. I want the name of x-axis is X, and the name of y-axis is Y.
+  To plot a scatterplot, I write the following code:
+  
+```{r}
+x<- 1:5
+y<- 1:5
+plot(x=x,y=y,xlab = "X",ylab = "Y",col="red",pch=16)
+
+```
+
+
+
+ To be noticed, we cannot change the axis properties or aesthetic features afterwards. Neither can we specify the properties that were not specified in the original "plot" command.
+  Except adding more data points and legend.
+  Suppose I have another variable called z, z=y/2. I can add x-z to the existing graph with blue points, and insert a legend to tell which color corresponds to y and which color corresponds to z. The codes are shown:
+  
+```{r}
+z<- y/2
+plot(x=x,y=y,xlab = "X",ylab = "Y",col="red",pch=16)
+points(x,z, pch=16, col="blue",ylim=c(0,5))
+legend("topleft",legend = c("y","z"),fill = c("red","blue"))
+
+```
+
+
+  You might have noticed that I tried to change the range of y-axis in the "points" command, but it did not work. As I mentioined, the property of axises have to be specified in the original "plot" command. There are many parameters in the "plot" function. People can use them wisely to accomplish most ploting tasks.
+  
+  
+  
+## 2 ggplot2
+
+ ggplot is in the package "ggplot2". It sees a specific graph as layers on layers (one plotting function build one layer). Usually, each layer specifies one of the following question:
+ 
+  which are the x's and y's in the plotting
+  which kind of plot is used and the setting about aesthetic properties
+  the setting of axis properties
+  The theme of plotting
+  
+  The layers canbe added one by one and they do not have to be in one coding sentence.
+  
+  Here is an example, using the same data in the previous example for basic R graphics.
+  
+```{r}
+library(ggplot2)
+x<- 1:5
+y<- 1:5
+z<- y/2
+q<-ggplot()+geom_point(mapping = aes(x,y,color="y"))+geom_point(mapping = aes(x,z,color="z"))+ ylab("test")
+q+ xlab("X")+ylab("Y")+ scale_color_manual(values = c("y"="red","z"="blue"))
+```
+  
+  
+  
+ You might also niticed that in the beginning I set the label of y axis to be "test". But in the next command, I change the label to be "Y". The final plot shows that the properties of axis can be modified, which is quite different from basic R plot.
+
+
+
+
+
+## 4 Comparison of basic R graphic and ggplot2
+
+  Besides the difference of philosophy of the two plotting system, from the perspective of users, one big difference is mentioned above: in basic R plot we have to specify almost everything in the functions like "plot". The properties cannot be modified afterwards. In ggplot2, properties are changable, which is flexible and convenient.
+  
+  Another big difference is that ggplot2 are friendly to plot data within a data frame. Many things are done automatically. Here is the example with the data in the previous plots organized in a data frame.
+  
+```{r}
+datay<- data.frame(x=x,rps=y,group="y")
+dataz<- data.frame(x=x,rps=z,group="z")
+data<- rbind(datay,dataz)
+ggplot(data = data,aes(x=x,y=rps,color=group))+geom_point()
+```
+  
+   The color is set according to different value of "group" variable and the legend is added automatically.
+   
+   
+   Another importance difference is that in ggplot2, it is easy to plot data in different group in different figures. While in basic R graphics, we need to set "par" and make plots one by one. The difference is huge if the there are many groups in the dataset. Here is the exmple in the two systems.
+   
+```{r}
+ggplot(data = data,aes(x=x,y=rps,color=group))+geom_point()+ facet_wrap(~group)
+```
+  
+  
+  
+  
+```{r}
+par(mfrow=c(1,2))
+plot(data$x[data$group=="y"],data$rps[data$group=="y"],col="red",pch=16,xlab = "X",ylab="rps",main = "y")
+plot(data$x[data$group=="z"],data$rps[data$group=="z"],col="blue",pch=16,xlab = "",ylab = "",ylim = c(1,5),main = "z")
+legend("topright",legend = c("y","z"),fill = c("red","blue"))
+
+```
+  
+  
+  
+  One more difference is that ggplot2 seems more friendly to the aesthetic of humanbeing.
+  
+  
+  But all of these differences do not mean basic R graphic is useless. It has its own advantages while ggplot2 has its own weakness:
+  
+  1) Basic R graphics is more straightforward and is more intuitive. So it is easy to learn. Ggplot2 is less intuitive. People need to learn for a while to get used to it. It also takes time to know what features can be adjusted in ggplot2.
+  
+  
+  2) people make plots to find the truth. The plot does need to be fancy but it should be easy to plot. For simple tasks, basic R plot is more handy.
+  
+  3) while ggplot2 has many automatical behavior, like adding legend, it is not so convenient to modify those default settings. Here is an example with the data used above:
+  
+  
+  The automatical setting of colors for the two groups are red and blue. If we want the color to be purple and green instead, another function "scale_color_manual" has to be added. It is not an intuitive thinking. People need to investigate what function should be use as well as how to use this function.
+  
+   However, the setting of colors for different groups in basic R graphic is more straightforward.
+   
+   Another similar example is the setting of legend. Though the legend is ggplot2 is usually made automatically, people have to struggle for a while to modify some default settings about the legend.
+  
+```{r}
+
+q<-ggplot(data = data,aes(x=x,y=rps,color=group))+geom_point()+ scale_color_manual(values = c("y"="purple","z"="green")) 
+q+labs(title = "change colors for diffrent groups")
+q + theme(legend.position="bottom", legend.box = "horizontal")+labs(title = "change legend")
+```
+  
+  
+  
+  In conclusion, ggplot2 has more ways for customization and is more sophisticaed. It takes time to master. In many situation, basic R graphic is good enough to see the truth behind the data.
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
