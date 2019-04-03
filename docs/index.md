@@ -16,6 +16,8 @@
 
 #### Data Visualization (static)
 
+[base R graphics vs. ggplot2](cc4317.html)
+
 [geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
@@ -41,9 +43,8 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
-[Leaflet vs. Parcoords](xx2295.html)
+[leaflet vs. parcoords](xx2295.html)
 
-[basic R graphic vs. ggplot2](cc4317.html)
 
 #### Writing Reports
 
