@@ -46,6 +46,8 @@
 
 [ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
 
+[ggplotly vs. plot_ly](community18.html)
+
 [ggplotly() vs. plot_ly() (subplots)](community_contribution_group17.html)
 
 [MASS vs. plotly vs. ggplot2 (heatmaps)](Community_Contribution%20Group20.html)
