@@ -4,7 +4,6 @@
 
 [Instructions for adding your project to this web site](https://github.com/jtr13/spring19/blob/master/README.md)
 
-#### Data Import
 
 #### Data Transformation
 
@@ -13,6 +12,7 @@
 [purrr vs. apply](ss5593&fq2150.html)
 
 [tidyr vs. reshape2](hx2259_qz2351.html)
+
 
 #### Data Visualization (static)
 
@@ -30,6 +30,7 @@
 
 [Census Map using Choroplethr, ggplot2 and tmap](zq2167_xc2463_census_map.html)
 
+
 #### Data Visualization (interactive)
 
 [dygraphs vs. plotly vs. Tableau (time series)](group8.html)
@@ -42,8 +43,5 @@
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
-[Leaflet vs. Parcoords](xx2295.html)
-
-#### Writing Reports
-
+[leaflet vs. parcoords](xx2295.html)
 
