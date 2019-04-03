@@ -47,11 +47,11 @@
 
 [ggplot2 vs. plotly (stock charts)](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
 
-[ggplotly() vs. plotly() (1)](Community_Contribution-gr2.html)
+[ggplotly() vs. plot_ly() (1)](Community_Contribution-gr2.html)
 
-[ggplotly() vs. plotly() (2)](community18.html)
+[ggplotly() vs. plot_ly() (2)](community18.html)
 
-[ggplotly() vs. plotly() (subplots)](community_contribution_group17.html)
+[ggplotly() vs. plot_ly() (subplots)](community_contribution_group17.html)
 
 [MASS vs. plotly vs. ggplot2 (heatmaps)](Community_Contribution%20Group20.html)
 
