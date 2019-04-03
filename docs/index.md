@@ -4,7 +4,6 @@
 
 [Instructions for adding your project to this web site](https://github.com/jtr13/spring19/blob/master/README.md)
 
-#### Data Import
 
 #### Data Transformation
 
@@ -15,6 +14,7 @@
 [tidyr vs. reshape2](hx2259_qz2351.html)
 
 [Base R vs. tidyverse](Community_contribution.html)
+
 
 #### Data Visualization (static)
 
@@ -32,6 +32,8 @@
 
 [R vs. Tableau (maps)](project_cc.html)
 
+[Scatterplot matrices in R](Community Contribution Group#16.html)
+
 [vcd vs. ggplot2](xx2308.html)
 
 
@@ -48,20 +50,10 @@
 
 [MASS vs. plotly vs. ggplot2 (heatmaps)](Community_Contribution%20Group20.html)
 
-
 [plotly vs. highcharter](kz2324_yz3383.html)
 
 [plotly vs. shiny](https://xishi-chen.shinyapps.io/communityC5/)
 
+[leaflet vs. parcoords](xx2295.html)
 
-[Plotting Scatterplot matrices in R](Community Contribution Group#16.html)
-
-#### Writing Reports
-
-[Leaflet vs. Parcoords](xx2295.html)
-
-[Leaflet vs. Tableau](Community_contribution-group25.html)
-
-
-#### Writing Reports
-
+[leaflet vs. Tableau](Community_contribution-group25.html)
