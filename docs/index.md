@@ -13,12 +13,15 @@
 
 [tidyr vs. reshape2](hx2259_qz2351.html)
 
-[Base R vs. tidyverse](Community_contribution.html)
 
 
 #### Data Visualization (static)
 
+[base R vs. tidyverse](Community_contribution.html)
+
 [base R graphics vs. ggplot2](cc4317.html)
+
+[choroplethr, ggplot2 and tmap (census maps)](zq2167_xc2463_census_map.html)
 
 [geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
 
@@ -44,11 +47,11 @@
 
 [ggplot2 vs. plotly (stock charts)](https://y-yin.shinyapps.io/Explore_Stock_Charts/)
 
-[ggplotly() vs. plot_ly()](Community_Contribution-gr2.html)
+[ggplotly() vs. plotly() (1)](Community_Contribution-gr2.html)
 
-[ggplotly vs. plot_ly](community18.html)
+[ggplotly() vs. plotly() (2)](community18.html)
 
-[ggplotly() vs. plot_ly() (subplots)](community_contribution_group17.html)
+[ggplotly() vs. plotly() (subplots)](community_contribution_group17.html)
 
 [MASS vs. plotly vs. ggplot2 (heatmaps)](Community_Contribution%20Group20.html)
 
