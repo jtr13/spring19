@@ -16,6 +16,8 @@
 
 #### Data Visualization (static)
 
+[choroplethr, ggplot2 and tmap (census maps)](zq2167_xc2463_census_map.html)
+
 [geom_mosaic() vs. vcd::mosaic() (1)](hw2664.html)
 
 [ggmosaic vs. vcd::mosaic() (2)](Community_Contribution_group_5.html)
@@ -28,7 +30,6 @@
 
 [vcd vs. ggplot2](xx2308.html)
 
-[Census Map using Choroplethr, ggplot2 and tmap](zq2167_xc2463_census_map.html)
 
 
 #### Data Visualization (interactive)
