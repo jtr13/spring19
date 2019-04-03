@@ -1,0 +1,122 @@
+---
+title: "Comparison between ggplotly and plot_ly"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Introduction
+
+Interactive data visualization allows users the freedom to fully explore and analyze data. It offers an overview of the data alongside tools for drilling
+down into the details, which may successfully fulfill many roles at once and address the different concerns of different audiences. There are two main ways to initiate a plotly object in R, the plot_ly() function and the ggplotly() function. 
+
+In this article, a case study is conducted to compare these two approaches. In order to make comparisons, we use a dataset documenting crimes in Alabama State in the US from 1960 to 2005 with different types of crimes and the iris dataset in R.
+
+
+# Example using ggplotly()
+
+In attempt to understand the crime counts of different type of crimes in Alabama State over time, we could plot year on x, count on y, and group the lines connecting these pairs by crime type. Using ggplot2, we can initiate a ggplot object with the ggplot() function which accepts a data frame and a mapping from data variables to visual aesthetics. Then we need to add a layer to the plot via geom_line() function to geometrically represent the mapping. In this case, it is a good idea to specify alpha transparency to help avoid overplotting.
+	
+
+
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+data <- read.csv("CrimeStatebyState.csv")
+head(data)
+p <- ggplot(data, aes(Year, Count)) +
+  geom_line(aes(group = Crime), alpha = 0.2)
+```
+
+Now that we have a valid ggplot2 object, we can then use the ggplotly() function in the plotly package to convert a ggplot2 object to a plotly object.
+
+```{r,warning=FALSE,message=FALSE}
+library(plotly)
+subplot(
+  p, ggplotly(p, tooltip = "Crime"),
+  ggplot(data, aes(Year, Count))+ geom_bin2d(),
+  ggplot(data, aes(Year, Count)) + geom_hex(),
+  nrows = 2,shareX = TRUE, shareY = TRUE,
+  titleY = FALSE, titleX = FALSE
+)
+```
+
+Then we make a scatter plot of the Sepal Length and the Sepal Width from the iris dataset in R by using the ggplotly() function. We group the points by the Species of the flowers.
+
+```{r}
+p <- ggplot(data=iris, mapping=aes(x=Sepal.Length, y=Sepal.Width))+
+  geom_point(aes(color=Species), size=3, alpha=0.5, position="jitter")+
+  xlab("Sepal Length")+
+  ylab("Sepal Width")+
+  ggtitle("Sepal Length and Width of Different Species")+
+  theme_light()
+ggplotly(p)
+```
+
+
+Since some of the data points are overplotted, we specify an alpha transparency and make small position adjustments to solve the problem of overploting.
+
+The ggplotly() function translates most things that we can do in ggplot2, but not quite everything. Next, we demonstrate how to create visualizations via the  plot_ly() function without using ggplot2.
+
+
+# Example using plot_ly()
+
+The cognitive framework underlying the plot_ly() interface draws inspiration from the layered grammar of graphics, but in contrast to ggplotly(), it provides a more flexible and direct interface to plotly.js. It is more direct in the sense that it doesn't call ggplot2's sometimes expensive plot building routines, and it is more flexible in the sense that data frames are not required, which is useful for visualizing matrices.
+
+
+```{r,warning=FALSE,message=FALSE}
+library(dplyr)
+dc <- group_by(data,Crime)
+p <- plot_ly(dc, x = ~Year, y = ~Count)
+add_lines(p, alpha = 0.2, name = "Different Crime", hoverinfo = "none")
+```
+
+The plotly package has a collection of add_*() functions, all of which inherit attributes defined in plot_ly(). These functions also inherit the data associated with the plotly object provided as input, unless otherwise specified with the data argument. 
+
+
+
+Since every plotly function modifies a plotly object, we can express complex multi-layer plots as a sequence of data manipulations and mappings to the visual space. Moreover, plotly functions are designed to take a plotly object as input, and return a modified plotly object, making it easy to chain together operations via the pipe operator (%>%) from the magrittr package. Consequently, we can re-express above figure in a much more readable and understandable fashion.
+
+
+```{r}
+allCrime <- data %>%
+  group_by(Crime) %>%
+  plot_ly(x = ~Year, y = ~Count) %>%
+  add_lines(alpha = 0.2)
+allCrime
+```
+
+
+Here is a comparison between ggplotly and plotly scatter plot. We use plotly to draw a scatter plot below.
+
+The scatterplot is useful for visualizing the correlation between two quantitative variables. If you supply a numeric vector for x and y in plot_ly(), it defaults to a scatterplot, but you can also be explicit about adding a layer of markers/points via the add_markers() function.
+
+```{r}
+iris %>% 
+  plot_ly(x=~jitter(Sepal.Length), y=~Sepal.Width) %>%
+  add_markers(color=~Species, alpha=0.6, marker=list(size=12)) %>%
+  layout(xaxis=list(title="Sepal Length"), yaxis=list(title="Sepal Width"))
+```
+
+Here is an example of 3D scatter plot using plotly since ggplotly can not draw a 3D scatter plot.
+We use data iris to show Sepal.Length, Sepal.Width and Petal.Length from x,y,z axis seprately. 3D scatter plot can show us the relation between data intuitively. 
+
+```{r}
+plot_ly(iris, x = ~Sepal.Length, y = ~Sepal.Width, z = ~Petal.Length) %>%
+  add_markers(color = ~Species)
+```
+
+
+
+# Conclusion
+
+Both the ggplotly() function and the plot_ly() function creat a plotly object in R and result in an interactive data visualization with tooltips, zooming, and panning enabled by default. The ggplotly() function converts a ggplot object into a plotly  object, while the plot_ly() function transforms the data into a plotly object.
+	
+The main advantage of the plot_ly() function is that it provides a more flexible and direct interface to plotly.js. It is more direct in the sense that it doesn't call ggplot2, which sometimes involves expensive plot building routines. And it is more flexible in the sense that data frames are not required compared to ggplot2, which is useful for visualizing data matrices. Being more flexible and direct to plotly.js, the plot_ly() function also support other graph types such as 3D surface and mesh plots which ggplot2 doesn't support, as shown in the last example. Since the plot_ly() function takes a plotly object as input, and returns a modified plotly object, we can easily chain together operations via the pipe operator, thus clearly expressing a sequence of multiple operations.
+
+The framework underlying both the plot_ly() function and the ggplotly() function draw inspiration from the layered grammar of graphics. So their learning curves are similar to each other and both of them are good for generating interactive data visualization in R. But the plot_ly() function is more flexible and it can accept other types of data other than data frame, which is a big convenience under certain contions. Especially, When we are working with 3D plots, the plot_ly() function is definitely a better choice.
+
+
+
+
+
+
