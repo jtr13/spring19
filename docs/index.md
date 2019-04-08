@@ -31,11 +31,11 @@
 
 [Plotting sequential discrete data: Stem plot in R vs. Python](ja3076_communitycontribution.html)
 
+[Plotting scatterplot matrices in R](Community_Contribution_Group16.html)
+
 [R vs. Tableau: (R portion)](hc2962_Community_Contribution.html)  [(Tableau video)](https://youtu.be/zAH9i60grxs) 
 
 [R vs. Tableau (maps)](project_cc.html)
-
-[Scatterplot matrices in R](Community Contribution Group#16.html)
 
 [vcd vs. ggplot2](xx2308.html)
 
@@ -62,3 +62,4 @@
 [leaflet vs. parcoords](xx2295.html)
 
 [leaflet vs. Tableau](Community_contribution-group25.html)
+
