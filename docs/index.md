@@ -61,5 +61,16 @@
 
 [leaflet vs. parcoords](xx2295.html)
 
-[leaflet vs. Tableau](Community_contribution-group25.html)
+[Plotting Scatterplot matrices in R](Community Contribution Group#16.html)
+
+#### Writing Reports
+
+[Leaflet vs. Parcoords](xx2295.html)
+
+[Leaflet vs. Tableau](Community_contribution-group25.html)
+
+#### Projects
+[NYC Taxi & FHV Project - Exploratory](NYC Taxi & FHV Project.html)
+
+
 
