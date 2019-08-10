@@ -70,7 +70,7 @@
 [Leaflet vs. Tableau](Community_contribution-group25.html)
 
 #### Projects
-[NYC Taxi & FHV Project - Exploratory](NYC Taxi & FHV Project.html)
+[NYC Taxi & FHV Project - Exploratory](NYC_Taxi_Project.html)
 
 
 
